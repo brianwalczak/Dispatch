@@ -8,7 +8,7 @@
 - (💬) Chat with website visitors in real-time. Each team can handle multiple sessions simultaneously.
 - (👥) Invite multiple members to your team so everyone can respond to chats and keep conversations organized.
 - (⚡) Add Dispatch to your website with a single JavaScript snippet - set up live chat instantly.
-- (🖥️) Optimized web interface for both desktop devices.
+- (🖥️) Optimized web interface for desktop devices.
 - (👤) Open-source under Apache 2.0 license - contribute or view it anytime.
 
 ## Getting Started

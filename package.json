@@ -23,8 +23,8 @@
     "db/generate": "npx prisma generate",
     "db/migrate:dev": "npx prisma migrate dev",
     "db/migrate:prod": "npx prisma migrate deploy",
-    "build": "cd client && npm install && npm run build",
-    "dev": "cd client && npm install && npm run dev"
+    "static/build": "cd static && npm install && npm run build",
+    "static/dev": "cd static && npm install && npm run dev"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",

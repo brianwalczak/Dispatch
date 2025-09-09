@@ -1,8 +1,8 @@
 {
-  "name": "dispatch-client",
+  "name": "dispatch-static",
   "private": true,
   "version": "1.0.0",
-  "description": "A professional real-time live chat platform that lets businesses communicate instantly with website visitors - all through a simple embeddable widget.",
+  "description": "The homepage for Dispatch, a professional real-time live chat platform that lets businesses communicate instantly with website visitors - all through a simple embeddable widget.",
   "homepage": "https://github.com/brianwalczak/dispatch#readme",
   "bugs": {
     "url": "https://github.com/brianwalczak/dispatch/issues"
@@ -20,7 +20,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "dompurify": "^3.2.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.2"

@@ -1,5 +1,5 @@
 <h1 align="center">Dispatch - Connect with your customers instantly.</h1>
-<p align="center">Aast, reliable live chat solution for your website to make customer support effortless.</p>
+<p align="center">A fast, reliable live chat solution for your website to make customer support effortless.</p>
 
 > [!WARNING]
 > **This project is currently in its beta state as I gather user feedback. The backend is still under construction! If you encounter any issues, please report them <a href='https://github.com/BrianWalczak/Dispatch/issues'>here</a> :)**

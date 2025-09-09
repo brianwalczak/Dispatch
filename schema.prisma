@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  sessions    Session[]
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  hash         String // (password hash w/ bcrypt)
+  teams        Team[]
+}
+
+model Session {
+  id          String @id @default(cuid())
+  teamId      String
+  visitorId   String
+  status      String @default("open") // open or closed
+  createdAt   DateTime @default(now())
+  closedAt    DateTime?
+
+  team        Team @relation(fields: [teamId], references: [id])
+  messages    Message[]
+}
+
+model Message {
+  id          String @id @default(cuid())
+  sessionId   String
+  senderId    String?
+  senderType  String // agent or visitor
+  content     String
+  read        Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  session     Session @relation(fields: [sessionId], references: [id])
+}

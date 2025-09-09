@@ -39,20 +39,13 @@ cd Dispatch
 
 Before you continue, make sure that Node.js is properly installed (run `node --version` to check if it exists). If you don't have it installed yet, you can download it [here](https://nodejs.org/en/download).
 
-Next, install the required dependencies and start the server (port 3000):
+Next, install the required dependencies and start the server (port 3000 by default):
 ```bash
 npm install
-node .
+npm run start
 ```
 
-The React + Vite frontend is located in the client folder. To launch a live development server:
-```bash
-cd client
-npm install
-npm run dev
-```
-
-By default, Vite will start the frontend on `http://localhost:5173`, and it will communicate with the backend on port 3000.
+**Note:** The source code for the Dispatch home page is located in the app folder. To compile it, use the `npm run static/build` command (it will be saved in `dist/`).
 
 ## Contributions
 

@@ -34,7 +34,7 @@ Prefer to host your own Dispatch instance? Dispatch is open-source under the Apa
 To start, you can download this repository by using the following:
 ```bash
 git clone https://github.com/BrianWalczak/Dispatch.git
-cd echoMail
+cd Dispatch
 ```
 
 Before you continue, make sure that Node.js is properly installed (run `node --version` to check if it exists). If you don't have it installed yet, you can download it [here](https://nodejs.org/en/download).

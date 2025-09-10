@@ -20,14 +20,6 @@ function Auth() {
         });
     };
 
-    useEffect(() => {
-        $('form').on('submit', handleSubmit);
-
-        return () => {
-            $('form').off('submit', handleSubmit);
-        };
-    }, []); // on mount
-
     return (
         <>
             <header className="p-4 text-black flex items-center justify-between">
@@ -39,7 +31,7 @@ function Auth() {
                 <h2 className="mt-5 text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Sign in to your account</h2>
 
                 <div className="mt-5 sm:mt-15 sm:mx-auto sm:w-full sm:max-w-md">
-                    <form action="http://localhost:3000/api/auth/sign_in" method="POST" className="space-y-6" onChange={() => setStatus(null)}>
+                    <form action="http://localhost:3000/api/auth/sign_in" method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-lg font-medium text-gray-900">Email address</label>
                             <div className="mt-2">

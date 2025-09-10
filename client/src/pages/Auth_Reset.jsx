@@ -22,14 +22,6 @@ function Auth_Reset() {
         });
     };
 
-    useEffect(() => {
-        $('form').on('submit', handleSubmit);
-
-        return () => {
-            $('form').off('submit', handleSubmit);
-        };
-    }, []); // on mount
-
     return (
         <>
             <header className="p-4 text-black flex items-center justify-between">
@@ -42,7 +34,7 @@ function Auth_Reset() {
                 <p className="text-center text-lg text-black mb-2 sm:mb-6">Don't worry, it happens. Enter your email address below and we'll send you a link to reset your password.</p>
 
                 <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
-                    <form action="http://localhost:3000/api/auth/reset_password" method="POST" className="space-y-6" onChange={() => setStatus(null)}>
+                    <form action="http://localhost:3000/api/auth/reset_password" method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-lg font-medium text-gray-900">Email address</label>
                             <div className="mt-2">

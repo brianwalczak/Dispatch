@@ -32,7 +32,7 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/auth/sign_in', async (req, res) => {
   let { email, password } = req.body;
 
   if (!email || !password) {
@@ -55,7 +55,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/auth/sign_up', async (req, res) => {
   let { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -104,6 +104,22 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+app.post('/api/auth/reset_password', async (req, res) => {
+  let { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Your request was malformed. Please try again." });
+  }
+
+  email = email?.trim().toLowerCase();
+
+  try {
+    // generate a password reset token and send an email (we'll do it later)
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
 
 const dashboard = path.join(__dirname, 'client', 'dist');
 

@@ -53,6 +53,7 @@ model Message {
 model UserToken {
   token       String @id
   method      String @default("auth")
+  expiresAt   DateTime? // null means never expires
 
   userId      String
   user        User   @relation(fields: [userId], references: [id])

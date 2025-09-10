@@ -96,7 +96,7 @@ app.post('/api/auth/sign_in', async (req, res) => {
     const valid = await bcrypt.compare(password, user.hash);
     if (!valid) return res.status(401).json({ error: "Your email address or password is incorrect." });
 
-    const token = await createToken(user.id, "auth");
+    const token = await createToken(user.id, "auth", { days: 7 }); // Auth tokens expire in 7 days
     res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
@@ -141,7 +141,7 @@ app.post('/api/auth/sign_up', async (req, res) => {
       data: { name, email, hash }
     });
 
-    const token = await createToken(user.id, "auth");
+    const token = await createToken(user.id, "auth", { days: 7 }); // Auth tokens expire in 7 days
     res.json({ success: true, token });
   } catch (err) {
     if (err.code === 'P2002') { // Prisma unique constraint failed
@@ -200,7 +200,7 @@ app.post('/api/auth/reset_password', async (req, res) => {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) return;
 
-      const token = await createToken(user.id, "reset");
+      const token = await createToken(user.id, "reset", { minutes: 15 }); // Reset tokens expire in 15 minutes
       const url = process.env.SERVER_DOMAIN ? `${process.env.SERVER_DOMAIN}/auth/reset_password?token=${token}` : `http://localhost:${PORT}/auth/reset_password?token=${token}`;
       
       await transporter.sendMail({

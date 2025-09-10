@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const nodemailer = require('nodemailer');
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 const bcrypt = require("bcryptjs");
@@ -22,6 +23,16 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true
   }
+});
+
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOSTNAME,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+        user: process.env.SMTP_USERNAME,
+        pass: process.env.SMTP_PASSWORD
+    }
 });
 
 app.use(cors({
@@ -49,7 +60,7 @@ app.post('/api/auth/sign_in', async (req, res) => {
     if (!valid) return res.status(401).json({ error: "Your email address or password is incorrect." });
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, data: user });
+    res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -94,7 +105,7 @@ app.post('/api/auth/sign_up', async (req, res) => {
     });
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, data: user });
+    res.json({ success: true, token });
   } catch (err) {
     if (err.code === 'P2002') { // Prisma unique constraint failed
       return res.status(400).json({ error: "It looks like your email is already registered." });
@@ -105,19 +116,63 @@ app.post('/api/auth/sign_up', async (req, res) => {
 });
 
 app.post('/api/auth/reset_password', async (req, res) => {
-  let { email } = req.body;
+  // check if there's a token parameter
+  if(req.body?.reset_token && req.body?.password) {
+    const { reset_token, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: "Your request was malformed. Please try again." });
-  }
+    try {
+      // Check if token is valid and payload is for reset
+      const payload = jwt.verify(reset_token, JWT_SECRET);
+      if(!payload?.reset) {
+        return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
+      }
 
-  email = email?.trim().toLowerCase();
+      // Check if user exists with that email
+      const user = await prisma.user.findUnique({ where: { email: payload.reset } });
+      if (!user) {
+        return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
+      }
 
-  try {
-    // generate a password reset token and send an email (we'll do it later)
+      // Password validation
+      if (password.length < 8 || password.length > 256) {
+        return res.status(400).json({ success: false, error: "Your password must be between 8 and 256 characters long." });
+      }
+
+      // Update the user's password
+      const hash = await bcrypt.hash(password, 10);
+      await prisma.user.update({
+        where: { email: payload.reset },
+        data: { hash }
+      });
+
+      res.json({ success: true });
+    } catch (err) {
+      return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
+    }
+  } else {
+    let { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: "Your request was malformed. Please try again." });
+    }
+
+    email = email?.trim().toLowerCase();
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "Internal server error. Please try again later." });
+
+    try {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) return;
+
+      const token = jwt.sign({ reset: email }, JWT_SECRET, { expiresIn: '30m' });
+      const url = process.env.SERVER_DOMAIN ? `${process.env.SERVER_DOMAIN}/auth/reset_password?token=${token}` : `http://localhost:${PORT}/auth/reset_password?token=${token}`;
+      
+      await transporter.sendMail({
+        from: `"Dispatch" <${process.env.SMTP_USERNAME}>`,
+        to: email,
+        subject: "Password Reset Request",
+        text: `Hello ${user.name.split(" ")[0]},\n\nYou've recently requested a password reset for your Dispatch account. To finish resetting your password, please use the following link: ${url}\nIf you didn't make this request, you may discard this email.\n\nThanks for using Dispatch.`
+      });
+    } catch {};
   }
 });
 

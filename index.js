@@ -18,14 +18,14 @@ const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).t
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || `http://localhost:${PORT}`,
+    origin: (process.env?.CORS_SOCKET_ORIGIN && process.env.CORS_SOCKET_ORIGIN !== 'false' ? process.env.CORS_SOCKET_ORIGIN : '*'),
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || `http://localhost:${PORT}`,
+  origin: (process.env?.CORS_ORIGIN && process.env.CORS_ORIGIN !== 'false' ? process.env.CORS_ORIGIN : '*'),
   credentials: true
 }));
 

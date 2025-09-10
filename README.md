@@ -29,6 +29,23 @@
 > [!NOTE]
 > **Self-hosting is optional and intended for developers or advanced users who want more control. Most users won't need to self-host.**
 
+> [!WARNING]
+> **In order to self-host Dispatch, you'll need to make sure you have a valid `.env` file containing your SMTP configuration; this step is required to send notification emails and request password resets. Additionally, you can configure your server and set the location for your database file here.**
+> ```env
+> DATABASE_URL="file:./dispatch.db" # Used by Prisma to locate your database file
+> CORS_ORIGIN="https://example.com" # HTTP requests from all other domains will be blocked (optional)
+> CORS_SOCKET_ORIGIN=false # By default, your Socket.IO server can be connected to on other websites (required for chat on external sites to function properly).
+> JWT_SECRET="<enter a unique, secure passphrase here>"
+> SERVER_PORT=3000
+> 
+> SMTP_HOSTNAME="mail.xxxxxxxxx.com"
+> SMTP_PORT=465
+> SMTP_SECURE=true
+> 
+> SMTP_USERNAME="xxxxx@xxxxxxxxxxxxxxxxxxx.com"
+> SMTP_PASSWORD="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+> ```
+
 Prefer to host your own Dispatch instance? Dispatch is open-source under the Apache 2.0 license, and is easy to set up on your own server.
 
 To start, you can download this repository by using the following:

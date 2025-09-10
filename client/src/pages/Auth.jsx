@@ -56,10 +56,10 @@ function Auth() {
                         </div>
                     </form>
 
-                    <p className="mt-10 text-center text-lg text-gray-500">
+                    <p className="mt-5 text-center text-lg text-gray-500">
                         Not a member? <a href="/auth/sign_up" className="font-semibold text-red-600 hover:text-red-500">Get started for free</a>.
-                        {status && <div className="mt-2 text-red-600">{status}</div>}
                     </p>
+                    {status && <div className="mt-2 text-lg text-red-600 text-center">{status}</div>}
                 </div>
             </div>
         </>

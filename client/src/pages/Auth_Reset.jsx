@@ -47,7 +47,7 @@ function Auth_Reset() {
                         </div>
                     </form>
 
-                    {status && <p className={`mt-5 text-center font-medium text-lg ${success ? 'text-green-600' : 'text-red-600'}`}>{status}</p>}
+                    {status && <div className={`mt-5 text-lg ${success ? 'text-green-600' : 'text-red-600'} text-center`}>{status}</div>}
                 </div>
             </div>
         </>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 function Auth() {
     const [status, setStatus] = useState(null);
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = function (e) {
         e.preventDefault();
@@ -11,10 +12,14 @@ function Auth() {
             method: $(e.target).attr('method'),
             data: $(e.target).serialize(),
             success: function (response) {
+                setSuccess(true);
+                setStatus("You are now signed in. Redirecting you to your dashboard...");
+
                 localStorage.setItem('token', response.token);
-                return window.location.reload();
+                return setTimeout(() => window.location.reload(), 1500);
             },
             error: function (xhr) {
+                setSuccess(false);
                 return setStatus(xhr.responseJSON?.error || xhr.statusText);
             }
         });
@@ -59,7 +64,7 @@ function Auth() {
                     <p className="mt-5 text-center text-lg text-gray-500">
                         Not a member? <a href="/auth/sign_up" className="font-semibold text-red-600 hover:text-red-500">Get started for free</a>.
                     </p>
-                    {status && <div className="mt-2 text-lg text-red-600 text-center">{status}</div>}
+                    {status && <div className={`mt-2 text-lg ${success ? 'text-green-600' : 'text-red-600'} text-center`}>{status}</div>}
                 </div>
             </div>
         </>

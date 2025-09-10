@@ -36,7 +36,6 @@
 > SERVER_DOMAIN="https://example.com" # This is used for emails to bring users to the right place
 > CORS_ORIGIN="https://example.com" # HTTP requests from all other domains will be blocked (optional)
 > CORS_SOCKET_ORIGIN=false # By default, your Socket.IO server can be connected to on other websites (required for chat on external sites to function properly).
-> JWT_SECRET="<enter a unique, secure passphrase here>"
 > SERVER_PORT=3000
 > 
 > SMTP_HOSTNAME="mail.xxxxxxxxx.com"

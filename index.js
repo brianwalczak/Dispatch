@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const nodemailer = require('nodemailer');
-const jwt = require("jsonwebtoken");
+const crypto = require('crypto');
 const { Server } = require("socket.io");
 const bcrypt = require("bcryptjs");
 const express = require('express');
@@ -15,7 +15,6 @@ const app = express();
 
 require('dotenv').config({ quiet: true });
 const PORT = process.env.SERVER_PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).toString("hex");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -43,6 +42,37 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+async function createToken(userId, method = "auth") {
+  try {
+    const token = await prisma.userToken.create({
+      data: {
+        userId: userId,
+        token: crypto.randomBytes(64).toString("hex"),
+        method: method
+      }
+    });
+
+    return (token?.token) ?? new Error("Could not create token.");
+  } catch {
+    return new Error("Could not create token.");
+  }
+}
+
+async function verifyToken(token, method = "auth") {
+  try {
+    const valid = await prisma.userToken.findUnique({
+      where: {
+        token: token,
+        method: method
+      }
+    });
+
+    return valid ?? false;
+  } catch {
+    return false;
+  }
+}
+
 app.post('/api/auth/sign_in', async (req, res) => {
   let { email, password } = req.body;
 
@@ -59,7 +89,7 @@ app.post('/api/auth/sign_in', async (req, res) => {
     const valid = await bcrypt.compare(password, user.hash);
     if (!valid) return res.status(401).json({ error: "Your email address or password is incorrect." });
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = await createToken(user.id);
     res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
@@ -104,7 +134,7 @@ app.post('/api/auth/sign_up', async (req, res) => {
       data: { name, email, hash }
     });
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = await createToken(user.id);
     res.json({ success: true, token });
   } catch (err) {
     if (err.code === 'P2002') { // Prisma unique constraint failed
@@ -122,13 +152,13 @@ app.post('/api/auth/reset_password', async (req, res) => {
 
     try {
       // Check if token is valid and payload is for reset
-      const payload = jwt.verify(reset_token, JWT_SECRET);
-      if(!payload?.reset) {
+      const valid = await verifyToken(reset_token, "reset");
+      if(!valid) {
         return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
       }
 
       // Check if user exists with that email
-      const user = await prisma.user.findUnique({ where: { email: payload.reset } });
+      const user = await prisma.user.findUnique({ where: { id: valid.userId } });
       if (!user) {
         return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
       }
@@ -141,7 +171,7 @@ app.post('/api/auth/reset_password', async (req, res) => {
       // Update the user's password
       const hash = await bcrypt.hash(password, 10);
       await prisma.user.update({
-        where: { email: payload.reset },
+        where: { id: valid.userId },
         data: { hash }
       });
 
@@ -163,7 +193,7 @@ app.post('/api/auth/reset_password', async (req, res) => {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) return;
 
-      const token = jwt.sign({ reset: email }, JWT_SECRET, { expiresIn: '30m' });
+      const token = await createToken(user.id, "reset");
       const url = process.env.SERVER_DOMAIN ? `${process.env.SERVER_DOMAIN}/auth/reset_password?token=${token}` : `http://localhost:${PORT}/auth/reset_password?token=${token}`;
       
       await transporter.sendMail({

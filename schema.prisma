@@ -23,6 +23,7 @@ model User {
   email        String @unique
   hash         String // (password hash w/ bcrypt)
   teams        Team[]
+  tokens       UserToken[]
 }
 
 model Session {
@@ -47,4 +48,12 @@ model Message {
   createdAt   DateTime @default(now())
 
   session     Session @relation(fields: [sessionId], references: [id])
+}
+
+model UserToken {
+  token       String @id
+  method      String @default("auth")
+
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
 }

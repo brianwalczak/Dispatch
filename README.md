@@ -33,6 +33,7 @@
 > **In order to self-host Dispatch, you'll need to make sure you have a valid `.env` file containing your SMTP configuration; this step is required to send notification emails and request password resets. Additionally, you can configure your server and set the location for your database file here.**
 > ```env
 > DATABASE_URL="file:./dispatch.db" # Used by Prisma to locate your database file
+> SERVER_DOMAIN="https://example.com" # This is used for emails to bring users to the right place
 > CORS_ORIGIN="https://example.com" # HTTP requests from all other domains will be blocked (optional)
 > CORS_SOCKET_ORIGIN=false # By default, your Socket.IO server can be connected to on other websites (required for chat on external sites to function properly).
 > JWT_SECRET="<enter a unique, secure passphrase here>"

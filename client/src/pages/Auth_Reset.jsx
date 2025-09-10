@@ -38,9 +38,9 @@ function Auth_Reset() {
             <a href="/auth/sign_in" className="bg-transparent text-red-500 text-base font-bold py-1.5 px-5 rounded-lg shadow border-2 border-red-500 hover:bg-red-700 hover:border-red-700 hover:text-white transition">Return to Login</a>
         </header>
 
-        <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 space-y-6">
-            <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Forgot your password?</h2>
-            <p className="font-semibold text-center text-lg text-black">Don't worry, it happens. Enter your email address below and we'll send you a link to reset your password.</p>
+        <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 space-y-6 mt-20">
+            <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-2 sm:mb-6">Forgot your password?</h2>
+            <p className="font-semibold text-center text-lg text-black mb-2 sm:mb-6">Don't worry, it happens. Enter your email address below and we'll send you a link to reset your password.</p>
 
             <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
                 <form action="http://localhost:3000/api/auth/reset_password" method="POST" className="space-y-6">
@@ -52,7 +52,7 @@ function Auth_Reset() {
                     </div>
 
                     <div>
-                        <button type="submit" className="flex w-full justify-center rounded-md bg-red-600 px-6 py-3 text-lg font-semibold text-white shadow-xs hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 cursor-pointer">Send confirmation email</button>
+                        <button type="submit" className="flex w-full justify-center rounded-md bg-red-600 px-6 py-3 text-lg font-bold text-white shadow-xs hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 cursor-pointer">Send confirmation email</button>
                     </div>
                 </form>
 

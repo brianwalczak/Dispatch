@@ -36,10 +36,10 @@ function Auth() {
             <a href="/auth/sign_up" className="bg-transparent text-red-500 text-base font-bold py-1.5 px-5 rounded-lg shadow border-2 border-red-500 hover:bg-red-700 hover:border-red-700 hover:text-white transition">Get Started</a>
         </header>
 
-        <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+        <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 mt-20">
             <h2 className="mt-5 text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Sign in to your account</h2>
 
-            <div className="mt-15 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="mt-5 sm:mt-15 sm:mx-auto sm:w-full sm:max-w-md">
                 <form action="http://localhost:3000/api/auth/sign_in" method="POST" className="space-y-6">
                     <div>
                         <label htmlFor="email" className="block text-lg font-medium text-gray-900">Email address</label>
@@ -61,7 +61,7 @@ function Auth() {
                     </div>
 
                     <div>
-                        <button type="submit" className="flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-lg font-semibold text-white shadow-xs hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 cursor-pointer">Sign in</button>
+                        <button type="submit" className="flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-lg font-bold text-white shadow-xs hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 cursor-pointer">Sign in</button>
                     </div>
                 </form>
 

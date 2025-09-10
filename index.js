@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const nodemailer = require('nodemailer');
+const { DateTime } = require('luxon');
 const crypto = require('crypto');
 const { Server } = require("socket.io");
 const bcrypt = require("bcryptjs");
@@ -42,13 +43,14 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-async function createToken(userId, method = "auth") {
+async function createToken(userId, method, ttl = null) {
   try {
     const token = await prisma.userToken.create({
       data: {
         userId: userId,
         token: crypto.randomBytes(64).toString("hex"),
-        method: method
+        method: method,
+        expiresAt: ttl ? DateTime.utc().plus(ttl).toJSDate() : null
       }
     });
 
@@ -58,14 +60,19 @@ async function createToken(userId, method = "auth") {
   }
 }
 
-async function verifyToken(token, method = "auth") {
+async function verifyToken(token, method) {
   try {
-    const valid = await prisma.userToken.findUnique({
+    const valid = await prisma.userToken.findFirst({
       where: {
         token: token,
         method: method
       }
     });
+
+    if(valid?.expiresAt && DateTime.utc() > DateTime.fromJSDate(valid.expiresAt)) {
+      await prisma.userToken.delete({ where: { token: valid.token } });
+      return false;
+    }
 
     return valid ?? false;
   } catch {
@@ -89,7 +96,7 @@ app.post('/api/auth/sign_in', async (req, res) => {
     const valid = await bcrypt.compare(password, user.hash);
     if (!valid) return res.status(401).json({ error: "Your email address or password is incorrect." });
 
-    const token = await createToken(user.id);
+    const token = await createToken(user.id, "auth");
     res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
@@ -134,7 +141,7 @@ app.post('/api/auth/sign_up', async (req, res) => {
       data: { name, email, hash }
     });
 
-    const token = await createToken(user.id);
+    const token = await createToken(user.id, "auth");
     res.json({ success: true, token });
   } catch (err) {
     if (err.code === 'P2002') { // Prisma unique constraint failed

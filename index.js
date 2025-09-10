@@ -218,6 +218,17 @@ const dashboard = path.join(__dirname, 'client', 'dist');
 server.listen(PORT, () => {
   console.log(`${chalk.green('[SERVER]')} Server is running on http://localhost:${PORT}`);
 
+  // remove expired tokens every 10 minutes
+  setInterval(async () => {
+    try {
+      await prisma.userToken.deleteMany({
+        where: {
+          expiresAt: { lt: DateTime.utc().toJSDate() }
+        }
+      });
+    } catch {};
+  }, 10 * 60 * 1000);
+
   if (fs.existsSync(dashboard) && fs.existsSync(path.join(dashboard, "index.html"))) {
     app.use(express.static(dashboard)); // First serve static files
     app.get('/{*any}', (req, res) => { // Then serve any other paths left

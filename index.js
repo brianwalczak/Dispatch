@@ -182,6 +182,9 @@ app.post('/api/auth/reset_password', async (req, res) => {
         data: { hash }
       });
 
+      // Delete the token to prevent re-use
+      await prisma.userToken.delete({ where: { token: valid.token } });
+
       res.json({ success: true });
     } catch (err) {
       return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });

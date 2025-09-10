@@ -40,7 +40,7 @@ function Auth_Reset() {
 
         <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 space-y-6 mt-20">
             <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-2 sm:mb-6">Forgot your password?</h2>
-            <p className="font-semibold text-center text-lg text-black mb-2 sm:mb-6">Don't worry, it happens. Enter your email address below and we'll send you a link to reset your password.</p>
+            <p className="text-center text-lg text-black mb-2 sm:mb-6">Don't worry, it happens. Enter your email address below and we'll send you a link to reset your password.</p>
 
             <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
                 <form action="http://localhost:3000/api/auth/reset_password" method="POST" className="space-y-6">

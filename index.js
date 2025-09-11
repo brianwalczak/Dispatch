@@ -103,6 +103,54 @@ app.post('/api/auth/sign_in', async (req, res) => {
   }
 });
 
+app.post('/api/workspaces/new', async (req, res) => {
+  let { name, description, token } = req.body;
+
+  if (!name || !description || !token) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  name = name?.trim();
+  description = description?.trim();
+
+  // Name validation
+  if (name.length < 5 || name.length > 100) {
+    return res.status(400).json({ success: false, error: "Your workspace name must be between 5 and 100 characters long." });
+  }
+
+  // Description validation
+  if (description.length < 5 || description.length > 256) {
+    return res.status(400).json({ success: false, error: "Your workspace description must be between 5 and 256 characters long." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if(!valid) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Create the workspace in the database
+    const workspace = await prisma.team.create({
+      data: {
+        name,
+        description,
+        users: {
+          connect: [{ id: valid.userId }]
+        }
+      }
+    });
+
+    if(!workspace) {
+      return res.status(500).json({ error: "Internal server error. Please try again later." });
+    }
+    
+    res.json({ success: true, data: workspace });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 app.post('/api/auth/sign_up', async (req, res) => {
   let { name, email, password } = req.body;
 

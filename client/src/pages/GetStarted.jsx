@@ -17,14 +17,35 @@ function GetStarted() {
         e.preventDefault();
 
         if (step === 1) {
-            const name = $('#name').val();
+            let name = $('#name').val();
+            if(name) name = name.trim();
 
-            if (!name?.trim().includes(" ")) {
+            // Name validation
+            if (!name || !name.includes(' ')) {
                 return setStatus("Please provide both your first and last name.");
+            } else if (name.length < 5 || name.length > 100) {
+                return setStatus("Your full name must be between 5 and 100 characters long.");
+            } else if (!name.match(/^[a-zA-Z\s'-]+$/)) {
+                return setStatus("Your full name contains invalid characters.");
             }
 
-            setName(name.trim());
+            setName(name);
             return setStep(2);
+        } else if (step === 2) {
+            let email = $('#email').val();
+            let password = $('#password').val();
+            if(email) email = email.trim();
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !email.match(emailRegex) || email.length > 255) {
+                return setStatus("Please provide a valid email address.");
+            }
+
+            // Password validation
+            if (!password || password.length < 8 || password.length > 256) {
+                return setStatus("Your password must be between 8 and 256 characters long.");
+            }
         }
         
         setForm({

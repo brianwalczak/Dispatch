@@ -80,6 +80,7 @@ async function verifyToken(token, method) {
   }
 }
 
+// -- Authentication Routes -- //
 app.post('/api/auth/sign_in', async (req, res) => {
   let { email, password } = req.body;
 
@@ -98,54 +99,6 @@ app.post('/api/auth/sign_in', async (req, res) => {
 
     const token = await createToken(user.id, "auth", { days: 7 }); // Auth tokens expire in 7 days
     res.json({ success: true, token });
-  } catch (err) {
-    res.status(500).json({ error: "Internal server error. Please try again later." });
-  }
-});
-
-app.post('/api/workspaces/new', async (req, res) => {
-  let { name, description, token } = req.body;
-
-  if (!name || !description || !token) {
-    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
-  }
-
-  name = name?.trim();
-  description = description?.trim();
-
-  // Name validation
-  if (name.length < 5 || name.length > 100) {
-    return res.status(400).json({ success: false, error: "Your workspace name must be between 5 and 100 characters long." });
-  }
-
-  // Description validation
-  if (description.length < 5 || description.length > 256) {
-    return res.status(400).json({ success: false, error: "Your workspace description must be between 5 and 256 characters long." });
-  }
-
-  try {
-    // Token validation
-    const valid = await verifyToken(token, "auth");
-    if(!valid) {
-      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
-    }
-
-    // Create the workspace in the database
-    const workspace = await prisma.team.create({
-      data: {
-        name,
-        description,
-        users: {
-          connect: [{ id: valid.userId }]
-        }
-      }
-    });
-
-    if(!workspace) {
-      return res.status(500).json({ error: "Internal server error. Please try again later." });
-    }
-    
-    res.json({ success: true, data: workspace });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -261,6 +214,81 @@ app.post('/api/auth/reset_password', async (req, res) => {
         text: `Hello ${user.name.split(" ")[0]},\n\nYou've recently requested a password reset for your Dispatch account. To finish resetting your password, please use the following link: ${url}\nIf you didn't make this request, you may discard this email.\n\nThanks for using Dispatch.`
       });
     } catch {};
+  }
+});
+
+// -- Create Routes -- //
+app.post('/api/workspaces/new', async (req, res) => {
+  let { name, description, token } = req.body;
+
+  if (!name || !description || !token) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  name = name?.trim();
+  description = description?.trim();
+
+  // Name validation
+  if (name.length < 5 || name.length > 100) {
+    return res.status(400).json({ success: false, error: "Your workspace name must be between 5 and 100 characters long." });
+  }
+
+  // Description validation
+  if (description.length < 5 || description.length > 256) {
+    return res.status(400).json({ success: false, error: "Your workspace description must be between 5 and 256 characters long." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if(!valid) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Create the workspace in the database
+    const workspace = await prisma.team.create({
+      data: {
+        name,
+        description,
+        users: {
+          connect: [{ id: valid.userId }]
+        }
+      }
+    });
+
+    if(!workspace) {
+      return res.status(500).json({ error: "Internal server error. Please try again later." });
+    }
+    
+    res.json({ success: true, data: workspace });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+// -- User Data Routes -- //
+app.post('/api/user/me', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if(!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Fetch the user data from Prisma
+    const user = await prisma.user.findUnique({ where: { id: valid.userId } });
+    if(!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    delete user.hash; // Remove the hash before sending the user object
+
+    res.json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 });
 

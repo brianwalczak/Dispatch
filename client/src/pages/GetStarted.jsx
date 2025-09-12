@@ -97,7 +97,7 @@ function GetStarted() {
                     ]);
 
                     if (response.status === "fulfilled") {
-                        setWorkspace(response.value.id);
+                        setWorkspace(response.value.data.id);
                         setCreateStep(3);
                     } else {
                         setStatus(response.reason.responseJSON?.error || response.reason.statusText);

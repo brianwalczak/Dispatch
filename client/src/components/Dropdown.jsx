@@ -28,15 +28,13 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
 
     let eventProps = {};
     
-    if (open && close) {
-        eventProps[open] = () => setIsOpen(true);
-        eventProps[close] = () => setIsOpen(false);
-    } else if (open) {
-        eventProps[open] = () => setIsOpen(prev => !prev);
-    } else if (close) {
-        eventProps[close] = () => setIsOpen(prev => !prev);
+    if(!open && !close) {
+        eventProps = {
+            onClick: () => setIsOpen(prev => !prev)
+        };
     } else {
-        eventProps.onClick = () => setIsOpen(prev => !prev);
+        if (open) eventProps[open] = () => setIsOpen(true);
+        if (close) eventProps[close] = () => setIsOpen(false);
     }
 
     return (

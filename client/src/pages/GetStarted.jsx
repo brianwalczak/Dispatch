@@ -88,7 +88,7 @@ function GetStarted() {
                             url: "http://localhost:3000/api/workspaces/new",
                             method: "POST",
                             data: {
-                                name: "Personal Workspace",
+                                name: `${(name.split(" ")[0] + "'s") || "Personal"} Workspace`,
                                 description: "This is your personal workspace where you can explore Dispatch and invite your team.",
                                 token: token
                             }

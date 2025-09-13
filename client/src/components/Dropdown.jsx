@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-function Dropdown({ children, type, className, position = 'left-[52px]', open = "onClick", close = "onClick" }) {
+function Dropdown({ children, type, className, position = 'left-[52px]', open = null, close = null }) {
     const [isOpen, setIsOpen] = useState(false);
     const btn = useRef();
     const menu = useRef();
@@ -26,10 +26,18 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
         return () => document.removeEventListener("mousedown", outClick);
     }, []);
 
-    const eventProps = {
-        [open]: () => setIsOpen(true),
-        [close]: () => setIsOpen(false)
-    };
+    let eventProps = {};
+    
+    if (open && close) {
+        eventProps[open] = () => setIsOpen(true);
+        eventProps[close] = () => setIsOpen(false);
+    } else if (open) {
+        eventProps[open] = () => setIsOpen(prev => !prev);
+    } else if (close) {
+        eventProps[close] = () => setIsOpen(prev => !prev);
+    } else {
+        eventProps.onClick = () => setIsOpen(prev => !prev);
+    }
 
     return (
         <>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-function Dropdown({ children, type, className, position = 'left-[52px]', method = "onClick" }) {
+function Dropdown({ children, type, className, position = 'left-[52px]', open = "onClick", close = "onClick" }) {
     const [open, setOpen] = useState(false);
     const btn = useRef();
     const menu = useRef();
@@ -27,7 +27,8 @@ function Dropdown({ children, type, className, position = 'left-[52px]', method 
     }, []);
 
     const eventProps = {
-        [method]: () => setOpen(prev => !prev)
+        [open]: () => setOpen(true),
+        [close]: () => setOpen(false)
     };
 
     return (

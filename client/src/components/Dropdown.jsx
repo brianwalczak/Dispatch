@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-function Dropdown({ children, type, className, position = 'left-[52px]' }) {
+function Dropdown({ children, type, className, position = 'left-[52px]', method = "onClick" }) {
     const [open, setOpen] = useState(false);
     const btn = useRef();
     const menu = useRef();
@@ -26,9 +26,13 @@ function Dropdown({ children, type, className, position = 'left-[52px]' }) {
         return () => document.removeEventListener("mousedown", outClick);
     }, []);
 
+    const eventProps = {
+        [method]: () => setOpen(prev => !prev)
+    };
+
     return (
         <>
-            <div ref={btn} type={type} onClick={() => setOpen(prev => !prev)} className={className}>{buttonChild}</div>
+            <div ref={btn} type={type} {...eventProps} className={className}>{buttonChild}</div>
 
             {open && (
                 <div ref={menu} type={type} menu="true" className={`absolute w-52 bg-white shadow-xl rounded-xl z-50 flex flex-col p-2 ${position}`}>

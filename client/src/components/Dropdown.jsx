@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 function Dropdown({ children, type, className, position = 'left-[52px]', open = "onClick", close = "onClick" }) {
-    const [open, setOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const btn = useRef();
     const menu = useRef();
 
@@ -18,7 +18,7 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
     useEffect(() => {
         const outClick = (event) => {
             if (menu.current && !menu.current.contains(event.target) && btn.current && !btn.current.contains(event.target)) {
-                setOpen(false);
+                setIsOpen(false);
             }
         };
 
@@ -27,18 +27,18 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
     }, []);
 
     const eventProps = {
-        [open]: () => setOpen(true),
-        [close]: () => setOpen(false)
+        [open]: () => setIsOpen(true),
+        [close]: () => setIsOpen(false)
     };
 
     return (
         <>
             <div ref={btn} type={type} {...eventProps} className={className}>{buttonChild}</div>
 
-            {open && (
+            {isOpen && (
                 <div ref={menu} type={type} menu="true" className={`absolute w-52 bg-white shadow-xl rounded-xl z-50 flex flex-col p-2 ${position}`}>
                     {menuChild}
-                    <button type="button" className="hidden menu-close" onClick={() => setOpen(false)} />
+                    <button type="button" className="hidden menu-close" onClick={() => setIsOpen(false)} />
                 </div>
             )}
         </>

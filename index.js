@@ -296,6 +296,50 @@ app.post('/api/user/me', async (req, res) => {
   }
 });
 
+// -- Sessions/Messages Routes -- //
+app.post('/api/sessions/:team', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || !req.params?.team) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Get the data for the session
+    let sessions = await prisma.session.findMany({
+      where: {
+        team: {
+          id: req.params.team, // session belongs to the team
+          users: { some: { id: valid.userId } } // user is part of the team
+        }
+      },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'desc' }, // newest messages first
+          take: 1 // only get the latest message for preview
+        }
+      },
+      orderBy: { createdAt: 'desc' } // newest sessions first
+    });
+    if (!sessions) sessions = [];
+
+    const safeSessions = sessions.map(({ token, messages, ...session }) => ({
+      ...session,
+      latestMessage: messages[0] || null
+    }));
+
+    res.json({ success: true, data: safeSessions });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 const dashboard = path.join(__dirname, 'client', 'dist');
 
 server.listen(PORT, () => {

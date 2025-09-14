@@ -26,13 +26,13 @@ const io = new Server(server, {
 });
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOSTNAME,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-        user: process.env.SMTP_USERNAME,
-        pass: process.env.SMTP_PASSWORD
-    }
+  host: process.env.SMTP_HOSTNAME,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USERNAME,
+    pass: process.env.SMTP_PASSWORD
+  }
 });
 
 app.use(cors({
@@ -69,7 +69,7 @@ async function verifyToken(token, method) {
       }
     });
 
-    if(valid?.expiresAt && DateTime.utc() > DateTime.fromJSDate(valid.expiresAt)) {
+    if (valid?.expiresAt && DateTime.utc() > DateTime.fromJSDate(valid.expiresAt)) {
       await prisma.userToken.delete({ where: { token: valid.token } });
       return false;
     }
@@ -117,9 +117,9 @@ app.post('/api/auth/sign_up', async (req, res) => {
   // Name validation
   if (!name || name.length < 5 || name.length > 100) {
     return res.status(400).json({ success: false, error: "Your full name must be between 5 and 100 characters long." });
-  } else if(!name.match(/^[a-zA-Z\s'-]+$/)) {
+  } else if (!name.match(/^[a-zA-Z\s'-]+$/)) {
     return res.status(400).json({ success: false, error: "Your full name contains invalid characters." });
-  } else if(!name.includes(' ')) {
+  } else if (!name.includes(' ')) {
     return res.status(400).json({ success: false, error: "Please provide both your first and last name." });
   }
 
@@ -155,13 +155,13 @@ app.post('/api/auth/sign_up', async (req, res) => {
 
 app.post('/api/auth/reset_password', async (req, res) => {
   // check if there's a token parameter
-  if(req.body?.reset_token && req.body?.password) {
+  if (req.body?.reset_token && req.body?.password) {
     const { reset_token, password } = req.body;
 
     try {
       // Check if token is valid and payload is for reset
       const valid = await verifyToken(reset_token, "reset");
-      if(!valid) {
+      if (!valid) {
         return res.status(400).json({ error: "Your password reset link is invalid. Please request a new one." });
       }
 
@@ -192,7 +192,7 @@ app.post('/api/auth/reset_password', async (req, res) => {
     }
   } else {
     let { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ error: "Your request was malformed. Please try again." });
     }
@@ -206,14 +206,14 @@ app.post('/api/auth/reset_password', async (req, res) => {
 
       const token = await createToken(user.id, "reset", { minutes: 15 }); // Reset tokens expire in 15 minutes
       const url = process.env.SERVER_DOMAIN ? `${process.env.SERVER_DOMAIN}/auth/reset_password?token=${token}` : `http://localhost:${PORT}/auth/reset_password?token=${token}`;
-      
+
       await transporter.sendMail({
         from: `"Dispatch" <${process.env.SMTP_USERNAME}>`,
         to: email,
         subject: "Password Reset Request",
         text: `Hello ${user.name.split(" ")[0]},\n\nYou've recently requested a password reset for your Dispatch account. To finish resetting your password, please use the following link: ${url}\nIf you didn't make this request, you may discard this email.\n\nThanks for using Dispatch.`
       });
-    } catch {};
+    } catch { };
   }
 });
 
@@ -241,7 +241,7 @@ app.post('/api/workspaces/new', async (req, res) => {
   try {
     // Token validation
     const valid = await verifyToken(token, "auth");
-    if(!valid) {
+    if (!valid) {
       return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     }
 
@@ -256,10 +256,10 @@ app.post('/api/workspaces/new', async (req, res) => {
       }
     });
 
-    if(!workspace) {
+    if (!workspace) {
       return res.status(500).json({ error: "Internal server error. Please try again later." });
     }
-    
+
     res.json({ success: true, data: workspace });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
@@ -277,16 +277,20 @@ app.post('/api/user/me', async (req, res) => {
   try {
     // Token validation
     const valid = await verifyToken(token, "auth");
-    if(!valid || !valid.userId) {
+    if (!valid || !valid.userId) {
       return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     }
 
     // Fetch the user data from Prisma
-    const user = await prisma.user.findUnique({ where: { id: valid.userId } });
-    if(!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    const user = await prisma.user.findUnique({
+      where: { id: valid.userId },
+      include: { teams: true } // basic teams data
+    });
+    if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     delete user.hash; // Remove the hash before sending the user object
 
-    res.json({ success: true, data: user });
+    const { hash, ...safeUser } = user;
+    res.json({ success: true, data: safeUser });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -305,7 +309,7 @@ server.listen(PORT, () => {
           expiresAt: { lt: DateTime.utc().toJSDate() }
         }
       });
-    } catch {};
+    } catch { };
   }, 10 * 60 * 1000);
 
   if (fs.existsSync(dashboard) && fs.existsSync(path.join(dashboard, "index.html"))) {

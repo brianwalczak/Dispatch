@@ -289,6 +289,19 @@ app.post('/api/user/me', async (req, res) => {
     if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     delete user.hash; // Remove the hash before sending the user object
 
+    // Update the lastOpenedId with the current workspace if it's different 
+    if (req.body.workspace && req.body.workspace !== user.lastOpenedId) {
+      // Check if the team exists and the user is part of it
+      if (user.teams.some(t => t.id === req.body.workspace)) {
+        await prisma.user.update({
+          where: { id: valid.userId },
+          data: { lastOpenedId: req.body.workspace }
+        });
+
+        user.lastOpenedId = req.body.workspace;
+      }
+    }
+
     res.json({ success: true, data: user });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });

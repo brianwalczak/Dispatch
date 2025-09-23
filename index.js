@@ -289,14 +289,52 @@ app.post('/api/user/me', async (req, res) => {
     if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     delete user.hash; // Remove the hash before sending the user object
 
-    const { hash, ...safeUser } = user;
-    res.json({ success: true, data: safeUser });
+    res.json({ success: true, data: user });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 });
 
 // -- Sessions/Messages Routes -- //
+app.post('/api/messages/:session', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || !req.params?.session) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Get the data for the session
+    let session = await prisma.session.findFirst({
+      where: {
+        visitorId: req.params.session, // find session based on id
+        team: {
+          users: { some: { id: valid.userId } } // user is part of the team
+        }
+      },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'desc' }, // newest messages first
+          include: { sender: { select: { id: true, name: true } } }
+        }
+      }
+    });
+    if (!session) session = {};
+    delete session.token; // Remove the token before sending the session object
+
+    res.json({ success: true, data: session });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 app.post('/api/sessions/:team', async (req, res) => {
   const { token } = req.body;
 

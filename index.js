@@ -339,7 +339,7 @@ app.post('/api/sessions/:team', async (req, res) => {
   }
 });
 
-app.post('/api/session/:session/messages', async (req, res) => {
+app.post('/api/session/:session', async (req, res) => {
   const { token } = req.body;
 
   if (!token || !req.params?.session) {

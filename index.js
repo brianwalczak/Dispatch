@@ -289,6 +289,7 @@ app.post('/api/user/me', async (req, res) => {
     if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     delete user.hash; // Remove the hash before sending the user object
 
+    // Keep a record of the last opened workspace for new device logins (to know where to leave off)
     let newLastOpenedId = user.lastOpenedId;
     // Update the lastOpenedId with the current workspace if it's different 
     if ((req.body.workspace && req.body.workspace !== user.lastOpenedId) && user.teams.some(t => t.id === req.body.workspace)) {
@@ -305,7 +306,7 @@ app.post('/api/user/me', async (req, res) => {
         where: { id: valid.userId },
         data: { lastOpenedId: newLastOpenedId }
       });
-      
+
       user.lastOpenedId = newLastOpenedId;
     }
 

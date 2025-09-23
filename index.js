@@ -297,7 +297,7 @@ app.post('/api/user/me', async (req, res) => {
     }
     
     // If there's no lastOpenedId but the user has teams, set it to the first team
-    if (!user.lastOpenedId && user.teams?.length > 0) {
+    if ((!user.lastOpenedId || !user.teams.some(t => t.id === user.lastOpenedId)) && user.teams?.length > 0) {
       newLastOpenedId = user.teams[0].id;
     }
 

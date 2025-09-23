@@ -363,12 +363,12 @@ app.post('/api/session/:session', async (req, res) => {
       },
       include: {
         messages: {
-          orderBy: { createdAt: 'desc' }, // newest messages first
+          orderBy: { createdAt: 'asc' }, // newest messages last (in list)
           include: { sender: { select: { id: true, name: true } } }
         }
       }
     });
-    if (!session) session = {};
+    if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
     delete session.token; // Remove the token before sending the session object
 
     res.json({ success: true, data: session });

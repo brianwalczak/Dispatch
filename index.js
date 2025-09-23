@@ -356,7 +356,7 @@ app.post('/api/session/:session', async (req, res) => {
     // Get the data for the session
     let session = await prisma.session.findFirst({
       where: {
-        visitorId: req.params.session, // find session based on id
+        id: req.params.session, // find session based on id
         team: {
           users: { some: { id: valid.userId } } // user is part of the team
         }
@@ -373,7 +373,6 @@ app.post('/api/session/:session', async (req, res) => {
 
     res.json({ success: true, data: session });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 });

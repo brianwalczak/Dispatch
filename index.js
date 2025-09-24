@@ -361,9 +361,63 @@ app.post('/api/sessions/:team', async (req, res) => {
 });
 
 app.post('/api/session/:session', async (req, res) => {
-  const { token } = req.body;
+  const { type, token } = req.body;
 
-  if (!token || !req.params?.session) {
+  if (!type || !token || !req.params?.session || (type !== 'agent' && type !== 'visitor')) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    let session;
+
+    if (type === 'agent') {
+      // Token validation
+      const valid = await verifyToken(token, "auth");
+      if (!valid || !valid.userId) {
+        return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+      }
+
+      // Get the data for the session
+      session = await prisma.session.findFirst({
+        where: {
+          id: req.params.session, // find session based on id
+          team: {
+            users: { some: { id: valid.userId } } // user is part of the team
+          }
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' }, // newest messages last (in list)
+            include: { sender: { select: { id: true, name: true } } }
+          }
+        }
+      });
+    } else if (type === 'visitor') {
+      // Get the data for the session
+      session = await prisma.session.findUnique({
+        where: { id: req.params.session, token: token }, // include secure token for visitors
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' }, // newest messages last (in list)
+            include: { sender: { select: { id: true, name: true } } }
+          }
+        }
+      });
+    }
+
+    if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
+    delete session.token; // Remove the token before sending the session object
+
+    res.json({ success: true, data: session });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.patch('/api/session/:session', async (req, res) => {
+  const { token, status } = req.body;
+
+  if (!token || !status || !req.params?.session || (status !== 'open' && status !== 'closed')) {
     return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
   }
 
@@ -374,25 +428,79 @@ app.post('/api/session/:session', async (req, res) => {
       return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
     }
 
-    // Get the data for the session
+    // Find the session to see if it exists
     let session = await prisma.session.findFirst({
       where: {
         id: req.params.session, // find session based on id
         team: {
           users: { some: { id: valid.userId } } // user is part of the team
         }
-      },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' }, // newest messages last (in list)
-          include: { sender: { select: { id: true, name: true } } }
-        }
       }
     });
     if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
-    delete session.token; // Remove the token before sending the session object
+    if (session.status === status) return res.status(400).json({ error: "Whoops! It looks like this session is already updated." });
 
-    res.json({ success: true, data: session });
+    const update = await prisma.session.update({
+      where: { id: session.id },
+      data: { status, closedAt: status === "closed" ? DateTime.utc().toJSDate() : null }
+    });
+    delete update.token; // Remove the token before sending the session object
+
+    res.json({ success: true, data: update });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/session/:session/create', async (req, res) => {
+  const { type, token, message } = req.body;
+
+  if (!type || !token || !message || !req.params?.session || (type !== 'agent' && type !== 'visitor')) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    let session;
+    let valid;
+
+    if (type === 'agent') {
+      // Token validation
+      valid = await verifyToken(token, "auth");
+      if (!valid || !valid.userId) {
+        return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+      }
+
+      // Get the data for the session
+      session = await prisma.session.findFirst({
+        where: {
+          id: req.params.session, // find session based on id
+          team: {
+            users: { some: { id: valid.userId } } // user is part of the team
+          }
+        }
+      });
+    } else if (type === 'visitor') {
+      // Get the data for the session
+      session = await prisma.session.findUnique({
+        where: { id: req.params.session, token: token } // include secure token for visitors
+      });
+    }
+
+    if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
+
+    // Create the message in the database
+    const newMessage = await prisma.message.create({
+      data: {
+        sessionId: session.id,
+        senderId: (type === "agent" ? valid?.userId : null),
+        content: message
+      },
+      include: {
+        sender: { select: { id: true, name: true } }
+      }
+    });
+
+    res.json({ success: true, data: newMessage });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

@@ -512,6 +512,9 @@ app.post('/api/session/:session/create', async (req, res) => {
     }
 
     if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
+    if(session.status === "closed" && type !== "agent") { // only an agent can add to closed conversations
+      return res.status(400).json({ error: "It looks like this conversation has been resolved." });
+    }
 
     // Create the message in the database
     const newMessage = await prisma.message.create({

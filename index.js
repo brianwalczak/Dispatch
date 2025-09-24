@@ -317,6 +317,31 @@ app.post('/api/user/me', async (req, res) => {
 });
 
 // -- Sessions/Messages Routes -- //
+app.post('/api/sessions/create', async (req, res) => {
+  // this is visitors only, so we're assuming this is a new visitor
+  const { teamId } = req.body;
+
+  if (!teamId) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Check if the team exists before creating a session
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) return res.status(404).json({ error: "It looks like this site developer hasn't setup live chat yet." });
+
+    // Create the new session
+    const session = await prisma.session.create({
+      data: { token: crypto.randomBytes(64).toString("hex"), teamId },
+      include: { messages: true }
+    });
+
+    res.json({ success: true, data: session });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 app.post('/api/sessions/:team', async (req, res) => {
   const { token } = req.body;
 
@@ -355,31 +380,6 @@ app.post('/api/sessions/:team', async (req, res) => {
     }));
 
     res.json({ success: true, data: safeSessions });
-  } catch (err) {
-    res.status(500).json({ error: "Internal server error. Please try again later." });
-  }
-});
-
-app.post('/api/sessions/create', async (req, res) => {
-  // this is visitors only, so we're assuming this is a new visitor
-  const { teamId } = req.body;
-
-  if (!teamId) {
-    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
-  }
-
-  try {
-    // Check if the team exists before creating a session
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team) return res.status(404).json({ error: "It looks like this site developer hasn't setup live chat yet." });
-
-    // Create the new session
-    const session = await prisma.session.create({
-      data: { token: crypto.randomBytes(64).toString("hex"), teamId },
-      include: { messages: true }
-    });
-
-    res.json({ success: true, data: session });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

@@ -375,7 +375,8 @@ app.post('/api/sessions/create', async (req, res) => {
 
     // Create the new session
     const session = await prisma.session.create({
-      data: { token: crypto.randomBytes(64).toString("hex"), teamId }
+      data: { token: crypto.randomBytes(64).toString("hex"), teamId },
+      include: { messages: true }
     });
 
     res.json({ success: true, data: session });

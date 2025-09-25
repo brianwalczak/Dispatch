@@ -4,16 +4,18 @@ function CreateWorkspace({ onLoad }) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState("");
+    const [token, setToken] = useState(localStorage.getItem("token"));
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-
         setLoading(false);
         if (onLoad) onLoad();
     }, []);
+
+    useEffect(() => {
+        if (!token) {
+            window.location.href = "/auth/sign_in";
+        }
+    }, [token]);
 
     const handleSubmit = async function (e) {
         e.preventDefault();
@@ -35,12 +37,6 @@ function CreateWorkspace({ onLoad }) {
             return setStatus("Please provide a description for your workspace.");
         } else if (description.length < 5 || description.length > 256) {
             return setStatus("Your workspace description must be between 5 and 256 characters long.");
-        }
-
-        // Token validation
-        const token = localStorage.getItem("token");
-        if (!token) {
-            window.location.href = "/auth/sign_in";
         }
 
         setSubmitting(true);

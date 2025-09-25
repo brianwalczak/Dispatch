@@ -295,7 +295,7 @@ app.post('/api/user/me', async (req, res) => {
     if ((req.body.workspace && req.body.workspace !== user.lastOpenedId) && user.teams.some(t => t.id === req.body.workspace)) {
       newLastOpenedId = req.body.workspace;
     }
-    
+
     // If there's no lastOpenedId but the user has teams, set it to the first team
     if ((!user.lastOpenedId || !user.teams.some(t => t.id === user.lastOpenedId)) && user.teams?.length > 0) {
       newLastOpenedId = user.teams[0].id;
@@ -442,7 +442,7 @@ app.post('/api/session/:session', async (req, res) => {
 app.patch('/api/session/:session', async (req, res) => {
   const { token, status } = req.body;
 
-  if (!token || !status || !req.params?.session || (status !== 'open' && status !== 'closed')) {
+  if (!token || !status || !req.params?.session || (status !== 'open' && status !== 'closed' && status !== 'delete')) {
     return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
   }
 
@@ -465,13 +465,18 @@ app.patch('/api/session/:session', async (req, res) => {
     if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
     if (session.status === status) return res.status(400).json({ error: "Whoops! It looks like this session is already updated." });
 
-    const update = await prisma.session.update({
-      where: { id: session.id },
-      data: { status, closedAt: status === "closed" ? DateTime.utc().toJSDate() : null }
-    });
-    delete update.token; // Remove the token before sending the session object
+    if (status === "delete") {
+      await prisma.session.delete({ where: { id: session.id } });
+      return res.json({ success: true });
+    } else {
+      const update = await prisma.session.update({
+        where: { id: session.id },
+        data: { status, closedAt: status === "closed" ? DateTime.utc().toJSDate() : null }
+      });
+      delete update.token; // Remove the token before sending the session object
 
-    res.json({ success: true, data: update });
+      res.json({ success: true, data: update });
+    }
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -512,7 +517,7 @@ app.post('/api/session/:session/create', async (req, res) => {
     }
 
     if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
-    if(session.status === "closed" && type !== "agent") { // only an agent can add to closed conversations
+    if (session.status === "closed" && type !== "agent") { // only an agent can add to closed conversations
       return res.status(400).json({ error: "It looks like this conversation has been resolved." });
     }
 

@@ -151,10 +151,47 @@ function Inbox({ user, onLoad, socket, setToast }) {
     useEffect(() => {
         if (!socket) return;
 
-        socket.on("message", (msg) => {
-            // this should be changed later (stats for nerds)
-            setToast({ id: "msg-toast", type: "success", message: "A message has been received, check the console.", onClose: () => setToast(null) });
-            console.log(msg);
+        // New session was created by a visitor
+        socket.on("new_session", (msg) => {
+            if (!msg.id || sessions.find(session => session.id === msg.id)) return;
+
+            setSessions(prevSessions => [msg, ...prevSessions]);
+        });
+
+        // New message was sent by either an agent or a visitor
+        socket.on("new_message", (msg) => {
+            if (!selected || msg.sessionId !== selected) return;
+
+            setMessages(prevMessages => {
+                const newMessages = [...prevMessages, msg]; // add to messages
+
+                // Sort by ascending (oldest first)
+                newMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                return newMessages;
+            });
+        });
+
+        // Session was permanently deleted by an agent
+        socket.on("session_delete", (msg) => {
+            if (!msg.id || !sessions.find(session => session.id === msg.id)) return;
+            setSessions(prevSessions => prevSessions.filter(session => session.id !== msg.id));
+
+            // If user was seeing this session, move them to another one if available
+            if (selected === msg.id) {
+                const nextItem = sessions.find(session => session.status === filter) || sessions[0] || null;
+                
+                setSelected(nextItem?.id || null);
+                if(nextItem?.status && nextItem.status !== filter) setFilter(nextItem?.status || 'open');
+            }
+        });
+
+        // Session was updated (status change) by an agent
+        socket.on("session_update", (msg) => {
+            if (!msg.id || !sessions.find(session => session.id === msg.id)) return;
+            setSessions(prevSessions => prevSessions.map(session => session.id === msg.id ? { ...session, ...msg } : session));
+
+            // If user was seeing this session and it no longer matches the filter, keep it focused by updating their filter
+            if (selected === msg.id && msg.status !== filter) setFilter(msg.status);
         });
     }, [socket]);
 

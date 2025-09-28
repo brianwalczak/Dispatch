@@ -680,13 +680,13 @@ io.use(async (socket, next) => {
         break;
       }
       case "visitor": {
-        const { visitorId } = socket.handshake.auth;
-        if (!visitorId) return next(new Error("Authentication error: no visitor ID provided"));
+        const { id } = socket.handshake.auth;
+        if (!id) return next(new Error("Authentication error: no visitor ID provided"));
 
-        const session = await prisma.session.findFirst({ where: { id: visitorId, token } });
+        const session = await prisma.session.findFirst({ where: { id, token } });
         if (!session) return next(new Error("Authentication error: invalid token"));
 
-        socket.user = { type: type, id: visitorId, team: session.teamId };
+        socket.user = { type: type, id, team: session.teamId };
         next();
         break;
       }

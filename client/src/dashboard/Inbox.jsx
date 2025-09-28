@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import { Dropdown, closeMenu } from "../components/Dropdown";
 
-function Inbox({ user, onLoad }) {
+function Inbox({ user, onLoad, setToast }) {
     const [loading, setLoading] = useState(true);
     const [socket, setSocket] = useState(null);
     const [sessions, setSessions] = useState([]);
@@ -31,7 +31,7 @@ function Inbox({ user, onLoad }) {
                     localStorage.removeItem("token");
                     window.location.href = "/auth/sign_in";
                 } else {
-                    console.log("An internal error occurred. Please try again later.");
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
                 }
             },
         });
@@ -41,7 +41,7 @@ function Inbox({ user, onLoad }) {
         if (!selected || !socket) return;
 
         const message = $("#message").val();
-        if (!message || message.length === 0 || message.length > 500) return console.log("Message must be between 1 and 500 characters.");
+        if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 
         $.ajax({
             url: `http://localhost:3000/api/session/${selected}/create`,
@@ -61,7 +61,7 @@ function Inbox({ user, onLoad }) {
                     localStorage.removeItem("token");
                     window.location.href = "/auth/sign_in";
                 } else {
-                    console.log("An internal error occurred. Please try again later.");
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
                 }
             },
         });
@@ -116,7 +116,7 @@ function Inbox({ user, onLoad }) {
                     localStorage.removeItem("token");
                     window.location.href = "/auth/sign_in";
                 } else {
-                    console.log("An internal error occurred. Please try again later.");
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
                 }
             },
         });
@@ -139,7 +139,7 @@ function Inbox({ user, onLoad }) {
                     localStorage.removeItem("token");
                     window.location.href = "/auth/sign_in";
                 } else {
-                    console.log("An internal error occurred. Please try again later.");
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
                 }
             },
         });
@@ -164,6 +164,8 @@ function Inbox({ user, onLoad }) {
         if (!socket) return;
 
         socket.on("message", (msg) => {
+            // this should be changed later (stats for nerds)
+            setToast({ id: "msg-toast", type: "success", message: "A message has been received, check the console.", onClose: () => setToast(null) });
             console.log(msg);
         });
     }, [socket]);

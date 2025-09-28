@@ -295,10 +295,10 @@ app.post('/api/user/me', async (req, res) => {
     // Update the lastOpenedId with the current workspace if it's different 
     if ((req.body.workspace && req.body.workspace !== user.lastOpenedId) && user.teams.some(t => t.id === req.body.workspace)) {
       newLastOpenedId = req.body.workspace;
-    // If there's no lastOpenedId but the user has teams, set it to the first team
+      // If there's no lastOpenedId but the user has teams, set it to the first team
     } else if ((!user.lastOpenedId || !user.teams.some(t => t.id === user.lastOpenedId)) && user.teams?.length > 0) {
       newLastOpenedId = user.teams[0].id;
-    // If the user has no teams, set lastOpenedId to null
+      // If the user has no teams, set lastOpenedId to null
     } else {
       newLastOpenedId = null;
     }
@@ -420,7 +420,7 @@ app.post('/api/sessions/create', async (req, res) => {
       data: { token: crypto.randomBytes(64).toString("hex"), teamId },
       include: { messages: true }
     });
-    
+
     // Send an event to all agents in the team about the new session
     const { token, messages, ...safeSession } = session;
     io.to(`team_${teamId}`).emit("new_session", {
@@ -562,7 +562,18 @@ app.patch('/api/session/:session', async (req, res) => {
 
       // Send an event to agents and the visitor that the session was deleted
       io.to(`team_${session.teamId}`).emit("session_delete", { id: session.id });
-      io.to(`visitor_${session.id}`).emit("session_delete", { id: session.id });
+
+      // Disconnect all sockets in the visitor room
+      const room = io.sockets.adapter.rooms.get(`visitor_${session.id}`);
+      if (room) {
+        room.forEach(id => {
+          const socket = io.sockets.sockets.get(id);
+          
+          if (socket) {
+            socket.disconnect("session_delete");
+          }
+        });
+      }
 
       return res.json({ success: true });
     } else {

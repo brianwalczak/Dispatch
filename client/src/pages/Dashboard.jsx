@@ -7,6 +7,8 @@ import CreateWorkspace from "../dashboard/CreateWorkspace";
 import Inbox from "../dashboard/Inbox";
 import Team from "../dashboard/Team";
 
+import DemoModal from "../components/DemoModal";
+
 function Dashboard({ type }) {
     const pages = ["inbox", "create_workspace", "team"];
     const DEFAULT_PAGE = "inbox";
@@ -92,6 +94,7 @@ function Dashboard({ type }) {
     return (
         <div className="bg-[#eff1ea] flex h-screen">
             {toast && <Toast {...toast} />}
+            <DemoModal />
 
             <div className="w-[52px] h-full bg-transparent flex flex-col items-center">
                 <Dropdown type="workspaces" position="top-2 left-[52px]" className="size-10 mt-3 cursor-pointer bg-black/10 rounded-lg flex justify-center items-center text-lg mb-3 text-gray-700 font-semibold">

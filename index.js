@@ -421,14 +421,14 @@ app.post('/api/sessions/create', async (req, res) => {
       include: { messages: true }
     });
 
+    res.json({ success: true, data: session });
+
     // Send an event to all agents in the team about the new session
     const { token, messages, ...safeSession } = session;
     io.to(`team_${teamId}`).emit("new_session", {
       ...safeSession,
       latestMessage: messages[0] || null
     });
-
-    res.json({ success: true, data: session });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -559,6 +559,7 @@ app.patch('/api/session/:session', async (req, res) => {
 
     if (status === "delete") {
       await prisma.session.delete({ where: { id: session.id } });
+      res.json({ success: true });
 
       // Send an event to agents and the visitor that the session was deleted
       io.to(`team_${session.teamId}`).emit("session_delete", { id: session.id });
@@ -575,20 +576,17 @@ app.patch('/api/session/:session', async (req, res) => {
           }
         });
       }
-
-      return res.json({ success: true });
     } else {
       const update = await prisma.session.update({
         where: { id: session.id },
         data: { status, closedAt: status === "closed" ? DateTime.utc().toJSDate() : null }
       });
       delete update.token; // Remove the token before sending the session object
+      res.json({ success: true, data: update });
 
       // Send an event to agents and the visitor that the session was updated
       io.to(`team_${session.teamId}`).emit("session_update", { id: session.id, status: update.status, closedAt: update.closedAt });
       io.to(`visitor_${session.id}`).emit("session_update", { id: session.id, status: update.status, closedAt: update.closedAt });
-
-      res.json({ success: true, data: update });
     }
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
@@ -646,11 +644,11 @@ app.post('/api/session/:session/create', async (req, res) => {
       }
     });
 
+    res.json({ success: true, data: newMessage });
+
     // Send an event to agents and the visitor about the new message
     io.to(`team_${session.teamId}`).emit("new_message", newMessage);
     io.to(`visitor_${session.id}`).emit("new_message", newMessage);
-
-    res.json({ success: true, data: newMessage });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

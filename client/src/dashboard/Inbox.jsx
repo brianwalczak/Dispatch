@@ -153,9 +153,16 @@ function Inbox({ user, onLoad, socket, setToast }) {
 
         // New session was created by a visitor
         socket.on("new_session", (msg) => {
+            let shouldOpen = false;
             if (!msg.id || sessions.find(session => session.id === msg.id)) return;
 
+            if(!selected && sessions.filter(session => session.status === 'open').length === 0) shouldOpen = true; // if they had the "all caught up" with no sessions, open this one
             setSessions(prevSessions => [msg, ...prevSessions]);
+
+            if(shouldOpen && msg.status === 'open') {
+                setFilter('open');
+                setSelected(msg.id);
+            }
         });
 
         // New message was sent by either an agent or a visitor

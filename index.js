@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 
 const prisma = new PrismaClient();
+const agents = new Map();
 const app = express();
 
 require('dotenv').config({ quiet: true });
@@ -294,11 +295,12 @@ app.post('/api/user/me', async (req, res) => {
     // Update the lastOpenedId with the current workspace if it's different 
     if ((req.body.workspace && req.body.workspace !== user.lastOpenedId) && user.teams.some(t => t.id === req.body.workspace)) {
       newLastOpenedId = req.body.workspace;
-    }
-
     // If there's no lastOpenedId but the user has teams, set it to the first team
-    if ((!user.lastOpenedId || !user.teams.some(t => t.id === user.lastOpenedId)) && user.teams?.length > 0) {
+    } else if ((!user.lastOpenedId || !user.teams.some(t => t.id === user.lastOpenedId)) && user.teams?.length > 0) {
       newLastOpenedId = user.teams[0].id;
+    // If the user has no teams, set lastOpenedId to null
+    } else {
+      newLastOpenedId = null;
     }
 
     if (newLastOpenedId !== user.lastOpenedId) {
@@ -311,6 +313,89 @@ app.post('/api/user/me', async (req, res) => {
     }
 
     res.json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/workspaces/:team', async (req, res) => {
+  const { token } = req.body;
+  const { team } = req.params;
+
+  if (!token || !team) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Fetch the workspace data
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: team, // find workspace based on id
+        users: {
+          some: { id: valid.userId } // user is part of the team
+        }
+      },
+      include: { users: true } // include users in the workspace
+    });
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+
+    const teamMap = agents.get(team);
+    workspace.users = workspace.users.map(({ hash, ...user }) => ({ // remove hash from user object
+      ...user,
+      online: !!(teamMap && teamMap.has(user.id) && teamMap.get(user.id)?.size > 0) // check if user is online
+    }));
+
+    res.json({ success: true, data: workspace });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.delete('/api/workspaces/:team/users/:user', async (req, res) => {
+  const { token } = req.body;
+  const { team, user: userId } = req.params;
+
+  if (!token || !team || !userId) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Check if the user is part of the team
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: team, // find workspace based on id
+        users: {
+          some: { id: valid.userId } // user is part of the team
+        }
+      },
+      include: { users: true } // include users in the workspace
+    });
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+    if (!workspace.users.some(u => u.id === userId)) { // user to be removed is part of the team
+      return res.status(404).json({ error: "We couldn't find this user in your workspace. They may have already been removed." });
+    }
+
+    // Remove the user from the team
+    await prisma.team.update({
+      where: { id: team },
+      data: {
+        users: { disconnect: { id: userId } }
+      }
+    });
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -580,7 +665,6 @@ io.use(async (socket, next) => {
   }
 });
 
-const agents = new Map();
 io.on("connection", (socket) => {
   const { type, id: userId, team: teamId } = socket.user;
 

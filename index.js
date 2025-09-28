@@ -562,6 +562,7 @@ app.patch('/api/session/:session', async (req, res) => {
 
       // Send an event to agents and the visitor that the session was deleted
       io.to(`team_${session.teamId}`).emit("session_delete", { id: session.id });
+      io.to(`visitor_${session.id}`).emit("session_delete", { id: session.id });
 
       // Disconnect all sockets in the visitor room
       const room = io.sockets.adapter.rooms.get(`visitor_${session.id}`);
@@ -570,7 +571,7 @@ app.patch('/api/session/:session', async (req, res) => {
           const socket = io.sockets.sockets.get(id);
           
           if (socket) {
-            socket.disconnect("session_delete");
+            socket.disconnect(true);
           }
         });
       }

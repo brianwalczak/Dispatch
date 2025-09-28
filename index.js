@@ -420,6 +420,13 @@ app.post('/api/sessions/create', async (req, res) => {
       data: { token: crypto.randomBytes(64).toString("hex"), teamId },
       include: { messages: true }
     });
+    
+    // Send an event to all agents in the team about the new session
+    const { token, messages, ...safeSession } = session;
+    io.to(`team_${teamId}`).emit("new_session", {
+      ...safeSession,
+      latestMessage: messages[0] || null
+    });
 
     res.json({ success: true, data: session });
   } catch (err) {
@@ -552,6 +559,11 @@ app.patch('/api/session/:session', async (req, res) => {
 
     if (status === "delete") {
       await prisma.session.delete({ where: { id: session.id } });
+
+      // Send an event to agents and the visitor that the session was deleted
+      io.to(`team_${session.teamId}`).emit("session_delete", { id: session.id });
+      io.to(`visitor_${session.id}`).emit("session_delete", { id: session.id });
+
       return res.json({ success: true });
     } else {
       const update = await prisma.session.update({
@@ -559,6 +571,10 @@ app.patch('/api/session/:session', async (req, res) => {
         data: { status, closedAt: status === "closed" ? DateTime.utc().toJSDate() : null }
       });
       delete update.token; // Remove the token before sending the session object
+
+      // Send an event to agents and the visitor that the session was updated
+      io.to(`team_${session.teamId}`).emit("session_update", { id: session.id, status: update.status, closedAt: update.closedAt });
+      io.to(`visitor_${session.id}`).emit("session_update", { id: session.id, status: update.status, closedAt: update.closedAt });
 
       res.json({ success: true, data: update });
     }
@@ -617,6 +633,10 @@ app.post('/api/session/:session/create', async (req, res) => {
         sender: { select: { id: true, name: true } }
       }
     });
+
+    // Send an event to agents and the visitor about the new message
+    io.to(`team_${session.teamId}`).emit("new_message", newMessage);
+    io.to(`visitor_${session.id}`).emit("new_message", newMessage);
 
     res.json({ success: true, data: newMessage });
   } catch (err) {

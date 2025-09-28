@@ -71,7 +71,6 @@ function Inbox({ user, onLoad, setToast }) {
 
     const setConversation = (status) => {
         if (!selected || !socket) return;
-        if (status === 'delete' && !confirm("Are you sure you want to delete this conversation? This action cannot be undone.")) return;
 
         $.ajax({
             url: `http://localhost:3000/api/session/${selected}`,

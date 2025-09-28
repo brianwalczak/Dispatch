@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import { Dropdown, closeMenu } from "../components/Dropdown";
 
-function Inbox({ user, onLoad, setToast }) {
+function Inbox({ user, onLoad, socket, setToast }) {
     const [loading, setLoading] = useState(true);
-    const [socket, setSocket] = useState(null);
     const [sessions, setSessions] = useState([]);
     const [messages, setMessages] = useState([]);
 
@@ -129,9 +127,6 @@ function Inbox({ user, onLoad, setToast }) {
             success: function (response) {
                 setSessions(response.data);
                 setSelected(response.data?.find(session => session.status === 'open')?.id || null); // try to find first open session
-
-                const newSocket = io("http://localhost:3000/", { auth: { type: "agent", token: token, teamId: user.team.id } });
-                setSocket(newSocket);
             },
             error: function (xhr) {
                 if (xhr.status === 401) {
@@ -145,12 +140,6 @@ function Inbox({ user, onLoad, setToast }) {
 
         setLoading(false);
         if (onLoad) onLoad();
-
-        return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
     }, []);
 
     useEffect(() => {

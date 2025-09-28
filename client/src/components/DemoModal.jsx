@@ -48,7 +48,7 @@ function DemoModal() {
                     <button onClick={handleClose} className="cursor-pointer flex-1 px-4 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">
                       Maybe Later
                     </button>
-                    <button onClick={() => window.open("/test/?workspace=" + localStorage.getItem('workspace'))} className="cursor-pointer flex-1 px-4 py-2.5 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
+                    <button onClick={() => window.open("/test/?workspace=" + localStorage.getItem('workspace')) && handleClose()} className="cursor-pointer flex-1 px-4 py-2.5 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
                       Try Demo
                     </button>
                 </div>

@@ -23,6 +23,7 @@ function LoadDashboard() {
     return <Dashboard type={page || null} />;
 }
 
+import TestChat from "./pages/TestChat";
 export default function App() {
     return (
         <>
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="/auth/reset_password" element={<RequireNoAuth><Auth_Reset /></RequireNoAuth>} />
                 <Route path="/" element={<RequireAuth><LoadDashboard /></RequireAuth>} />
                 <Route path="/:page" element={<RequireAuth><LoadDashboard /></RequireAuth>} />
+                <Route path="/test" element={<TestChat />} />
             </Routes>
         </>
     );

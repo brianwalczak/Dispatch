@@ -539,6 +539,95 @@ app.post('/api/session/:session/create', async (req, res) => {
   }
 });
 
+// -- Websocket Handling -- //
+io.use(async (socket, next) => {
+  try {
+    const { type, token } = socket.handshake.auth;
+    if (!["agent", "visitor"].includes(type)) return next(new Error("Authentication error: invalid type provided"));
+    if (!token) return next(new Error("Authentication error: no token provided"));
+
+    switch (type) {
+      case "agent": {
+        const { teamId } = socket.handshake.auth;
+        if (!teamId) return next(new Error("Authentication error: no team ID provided"));
+
+        const verify = await verifyToken(token, "auth");
+        if (!verify) return next(new Error("Authentication error: invalid token"));
+
+        const user = await prisma.user.findUnique({ where: { id: verify.userId }, include: { teams: true } });
+        if (!user || !user.teams.some(t => t.id === teamId)) {
+          return next(new Error("Authentication error: you do not have access to that team"));
+        }
+
+        socket.user = { type: type, id: verify.userId, team: teamId };
+        next();
+        break;
+      }
+      case "visitor": {
+        const { visitorId } = socket.handshake.auth;
+        if (!visitorId) return next(new Error("Authentication error: no visitor ID provided"));
+
+        const session = await prisma.session.findFirst({ where: { id: visitorId, token } });
+        if (!session) return next(new Error("Authentication error: invalid token"));
+
+        socket.user = { type: type, id: visitorId, team: session.teamId };
+        next();
+        break;
+      }
+    }
+  } catch (err) {
+    next(new Error("An unknown error occurred during authentication."));
+  }
+});
+
+const agents = new Map();
+io.on("connection", (socket) => {
+  const { type, id: userId, team: teamId } = socket.user;
+
+  // join room based on type
+  if (type === "visitor" && userId) {
+    socket.join(`visitor_${userId}`);
+  } else if (type === "agent" && teamId) {
+    socket.join(`team_${teamId}`);
+  }
+
+  // check the count of connected clients
+  if (type === "agent" && teamId && userId) {
+    // create the team map if it doesn't exist
+    if (!agents.has(teamId)) agents.set(teamId, new Map());
+    const teamMap = agents.get(teamId);
+
+    // add this agent to the team map with their socket id
+    if (!teamMap.has(userId)) teamMap.set(userId, new Set());
+    teamMap.get(userId).add(socket.id);
+
+    // emit unique agent count to their team
+    io.to(`team_${teamId}`).emit("members", teamMap.size);
+  }
+
+  socket.on("disconnect", () => {
+    if (type === "agent" && teamId && userId) {
+      const teamMap = agents.get(teamId);
+      if (!teamMap) return;
+
+      const sockets = teamMap.get(userId);
+      if (!sockets) return;
+
+      sockets.delete(socket.id); // remove this socket only
+
+      if (sockets.size === 0) {
+        teamMap.delete(userId); // remove user entirely if no sockets left
+      }
+
+      io.to(`team_${teamId}`).emit("members", teamMap.size); // emit updated count first
+
+      if (teamMap.size === 0) {
+        agents.delete(teamId); // remove team entirely if no agents left
+      }
+    }
+  });
+});
+
 const dashboard = path.join(__dirname, 'client', 'dist');
 
 server.listen(PORT, () => {

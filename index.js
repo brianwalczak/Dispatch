@@ -791,7 +791,12 @@ io.on("connection", (socket) => {
         where: {
           sessionId: data?.id, // find session based on id
           senderId: null, // all the messages sent by visitor
-          read: false
+          read: false,
+          session: {
+            team: {
+              users: { some: { id: userId } } // user is part of the team
+            }
+          }
         },
         data: { read: true } // mark them as read
       });

@@ -192,6 +192,9 @@ function Inbox({ user, onLoad, socket, setToast }) {
             setSelected(prevSelected => {
                 if (!prevSelected || msg.sessionId !== prevSelected) return prevSelected;
 
+                // acknowledge that the agent has seen this message if they are viewing this session (if message is coming from the visitor, NOT agents)
+                if (!msg.sender) socket.emit("messages_read", { id: prevSelected });
+
                 setMessages(prevMessages => {
                     if (prevMessages.find(m => m.id === msg.id)) return prevMessages;
 
@@ -254,8 +257,15 @@ function Inbox({ user, onLoad, socket, setToast }) {
 
         // Acknowledge that visitor has read messages
         const messagesRead = (msg) => {
-            if (!selected || msg.id !== selected) return;
-            setMessages(prevMessages => prevMessages.map(m => m.sender ? { ...m, read: true } : m)); // mark all as read
+            setMessages(prevMessages =>
+                prevMessages.map(m => {
+                    // only mark messages as read if they're in the currently selected session (by checking session id)
+                    if (m.sessionId === msg.id && m.sender) {
+                        return { ...m, read: true }; // mark all as read
+                    }
+                    return m;
+                })
+            );
         };
 
         socket.on("new_session", newSession);

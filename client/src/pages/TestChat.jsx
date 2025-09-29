@@ -85,6 +85,9 @@ function TestChat() {
             setSession(prevSession => {
                 if (!prevSession || msg.sessionId !== prevSession.id) return prevSession;
 
+                // acknowledge that the visitor has seen this message (if message is coming from an agent, NOT itself)
+                if (msg.sender) socket.emit("messages_read", { id: prevSession.id });
+
                 setMessages(prevMessages => {
                     if (prevMessages.find(m => m.id === msg.id)) return prevMessages;
 

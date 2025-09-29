@@ -28,7 +28,6 @@ function TestChat() {
                 setMessages(response.data.messages || []);
                 setAuth({ token: response.data.token, id: response.data.id });
 
-                connectSession();
                 return response.data;
             }
 
@@ -52,7 +51,6 @@ function TestChat() {
                     setMessages(response.data.messages || []);
                     setAuth({ token: data.token, id: data.id });
 
-                    connectSession();
                     return response.data;
                 }
             },
@@ -68,17 +66,16 @@ function TestChat() {
 
     useEffect(() => {
         if (!auth || !auth.token || !auth.id) return;
-        localStorage.setItem("session", JSON.stringify(auth)); // save session
-    }, [auth]);
-
-    const connectSession = () => {
-        if (!auth || !auth.token || !auth.id) return;
         if (socket) socket.disconnect();
 
         const newSocket = io("http://localhost:3000/", { auth: { type: "visitor", token: auth.token, id: auth.id } });
         setSocket(newSocket);
-        return newSocket;
-    };
+
+        localStorage.setItem("session", JSON.stringify(auth)); // save session
+        return () => {
+            newSocket.disconnect();
+        };
+    }, [auth]);
 
     useEffect(() => {
         if (!socket) return;

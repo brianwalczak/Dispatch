@@ -152,54 +152,101 @@ function Inbox({ user, onLoad, socket, setToast }) {
         if (!socket) return;
 
         // New session was created by a visitor
-        socket.on("new_session", (msg) => {
-            let shouldOpen = false;
-            if (!msg.id || sessions.find(session => session.id === msg.id)) return;
+        const newSession = (msg) => {
+            setSessions(prevSessions => {
+                if (prevSessions.find(session => session.id === msg.id)) return prevSessions;
 
-            if(!selected && sessions.filter(session => session.status === 'open').length === 0) shouldOpen = true; // if they had the "all caught up" with no sessions, open this one
-            setSessions(prevSessions => [msg, ...prevSessions]);
+                const noneOpen = prevSessions.every(session => session.status !== 'open');
+                const updated = [msg, ...prevSessions];
 
-            if(shouldOpen && msg.status === 'open') {
-                setFilter('open');
-                setSelected(msg.id);
-            }
-        });
+                setSelected(prevSelected => {
+                    if ((!prevSelected && noneOpen) && msg.status === 'open') { // if they had the "all caught up" with no sessions, open this one
+                        setFilter('open');
+                        return msg.id;
+                    }
+                    return prevSelected;
+                });
+
+                return updated;
+            });
+        };
 
         // New message was sent by either an agent or a visitor
-        socket.on("new_message", (msg) => {
-            if (!selected || msg.sessionId !== selected) return;
+        const newMessage = (msg) => {
+            setSelected(prevSelected => {
+                if (!prevSelected || msg.sessionId !== prevSelected) return prevSelected;
 
-            setMessages(prevMessages => {
-                const newMessages = [...prevMessages, msg]; // add to messages
+                setMessages(prevMessages => {
+                    if (prevMessages.find(m => m.id === msg.id)) return prevMessages;
 
-                // Sort by ascending (oldest first)
-                newMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                return newMessages;
+                    const newMessages = [...prevMessages, msg]; // add new message
+
+                    // Sort by ascending (oldest first)
+                    newMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    return newMessages;
+                });
+
+                return prevSelected;
             });
-        });
+        };
 
         // Session was permanently deleted by an agent
-        socket.on("session_delete", (msg) => {
-            if (!msg.id || !sessions.find(session => session.id === msg.id)) return;
-            setSessions(prevSessions => prevSessions.filter(session => session.id !== msg.id));
+        const sessionDelete = (msg) => {
+            setSessions(prevSessions => {
+                if (!prevSessions.find(session => session.id === msg.id)) return prevSessions;
+                const updated = prevSessions.filter(session => session.id !== msg.id);
 
-            // If user was seeing this session, move them to another one if available
-            if (selected === msg.id) {
-                const nextItem = sessions.find(session => session.status === filter) || sessions[0] || null;
-                
-                setSelected(nextItem?.id || null);
-                if(nextItem?.status && nextItem.status !== filter) setFilter(nextItem?.status || 'open');
-            }
-        });
+                // If user was seeing this session, move them to another one if available
+                setSelected(prevSelected => {
+                    if (prevSelected === msg.id) {
+                        let nextId = null;
+
+                        setFilter(prevFilter => {
+                            const nextItem = updated.find(s => s.status === prevFilter) || updated[0] || null;
+
+                            nextId = nextItem?.id || null;
+                            return nextItem?.status || prevFilter;
+                        });
+
+                        return nextId;
+                    }
+                    return prevSelected;
+                });
+
+                return updated;
+            });
+        };
 
         // Session was updated (status change) by an agent
-        socket.on("session_update", (msg) => {
-            if (!msg.id || !sessions.find(session => session.id === msg.id)) return;
-            setSessions(prevSessions => prevSessions.map(session => session.id === msg.id ? { ...session, ...msg } : session));
+        const sessionUpdate = (msg) => {
+            setSessions(prevSessions => {
+                if (!prevSessions.find(session => session.id === msg.id)) return prevSessions;
+                const updated = prevSessions.map(session => session.id === msg.id ? { ...session, ...msg } : session);
 
-            // If user was seeing this session and it no longer matches the filter, keep it focused by updating their filter
-            if (selected === msg.id && msg.status !== filter) setFilter(msg.status);
-        });
+                // If user was seeing this session and it no longer matches the filter, keep it focused by updating their filter
+                setSelected(prevSelected => {
+                    if (prevSelected === msg.id) {
+                        setFilter(prevFilter => (msg.status !== prevFilter ? msg.status : prevFilter));
+                    }
+
+                    return prevSelected;
+                });
+
+                return updated;
+            });
+        };
+
+        socket.on("new_session", newSession);
+        socket.on("new_message", newMessage);
+        socket.on("session_delete", sessionDelete);
+        socket.on("session_update", sessionUpdate);
+
+        return () => {
+            socket.off("new_session", newSession);
+            socket.off("new_message", newMessage);
+            socket.off("session_delete", sessionDelete);
+            socket.off("session_update", sessionUpdate);
+        };
     }, [socket]);
 
     useEffect(() => {

@@ -37,7 +37,7 @@ export default function Home() {
                     <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">Connect with your customers <span className="flame-text">instantly</span>.</h1>
                     <p className="text-lg md:text-xl text-gray-300 mb-8">Fast, reliable live chat for your website to make customer support effortless.</p>
 
-                    <Link to="/dashboard" className="md:inline-block bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-red-700 transition">Get Started</Link>
+                    <Link to="https://app.dispatch.brian.icu/" className="md:inline-block bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-red-700 transition">Get Started</Link>
                     <Link to="/docs" className="md:inline-block bg-transparent text-red-500 font-semibold py-3 px-6 rounded-lg shadow border border-red-500 hover:bg-red-700 hover:text-white transition ml-3">View Docs</Link>
                 </div>
             </main>

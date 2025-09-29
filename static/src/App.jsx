@@ -6,7 +6,6 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Docs from "./pages/Docs";
-import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import "./index.css";
 
@@ -49,7 +48,6 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/docs" element={<Docs />} />
-                <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="*" element={<NotFound />} />
             </Routes>

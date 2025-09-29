@@ -168,7 +168,7 @@ function TestChat() {
             if (!currentSession) return; // failed to create session
         }
 
-        if(session.status === 'closed') return setToast({ id: "err-toast", type: "error", message: "This conversation has been closed. You are unable to make any changes.", onClose: () => setToast(null) });
+        if(currentSession.status === 'closed') return setToast({ id: "err-toast", type: "error", message: "This conversation has been closed. You are unable to make any changes.", onClose: () => setToast(null) });
         const message = $("#message").val();
         if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 

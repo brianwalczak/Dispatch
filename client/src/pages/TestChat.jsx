@@ -12,7 +12,7 @@ function TestChat() {
 
     useEffect(() => {
         chatEnd.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    }, [messages, session]);
 
     const createSession = async () => {
         try {
@@ -47,7 +47,7 @@ function TestChat() {
             data: { type: "visitor", token: data.token },
             success: function (response) {
                 if (response.data && response.data.messages) {
-                    setSession(data);
+                    setSession(response.data);
                     setMessages(response.data.messages || []);
                     saveSession(data);
 
@@ -168,6 +168,7 @@ function TestChat() {
             if (!currentSession) return; // failed to create session
         }
 
+        if(session.status === 'closed') return setToast({ id: "err-toast", type: "error", message: "This conversation has been closed. You are unable to make any changes.", onClose: () => setToast(null) });
         const message = $("#message").val();
         if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 
@@ -237,6 +238,10 @@ function TestChat() {
                         </div>
                     )}
 
+                    {session && session.createdAt && (
+                        <div className="flex justify-center text-gray-400 text-center text-xs mb-4">This conversation was created on {new Date(session.createdAt).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", hour12: true })}</div>
+                    )}
+
                     {messages.map((msg, idx) => (
                         <div key={idx} className={`mb-4 flex ${msg.sender ? "justify-start" : "justify-end"}`}>
                             <div className={`max-w-xs px-4 py-2 rounded-xl shadow-sm ${msg.sender ? "bg-white text-gray-800 border border-gray-200" : "bg-blue-600 text-white"}`}>
@@ -247,6 +252,10 @@ function TestChat() {
                             </div>
                         </div>
                     ))}
+
+                    {session && session.status === 'closed' && session.closedAt && (
+                        <div className="flex justify-center text-gray-400 text-center text-xs mt-4">This conversation was closed on {new Date(session.closedAt).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", hour12: true })}</div>
+                    )}
 
                     <div ref={chatEnd} />
                 </div>

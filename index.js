@@ -494,6 +494,21 @@ app.post('/api/session/:session', async (req, res) => {
         return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
       }
 
+      // Mark all messages as read up to this point (doesn't matter if session is invalid since it'll simply do nothing)
+      await prisma.message.updateMany({
+        where: {
+          sessionId: req.params.session, // find session based on id
+          senderId: null, // all the messages sent by visitor
+          read: false,
+          session: {
+            team: {
+              users: { some: { id: valid.userId } } // user is part of the team
+            }
+          }
+        },
+        data: { read: true } // mark them as read
+      });
+
       // Get the data for the session
       session = await prisma.session.findFirst({
         where: {
@@ -509,7 +524,20 @@ app.post('/api/session/:session', async (req, res) => {
           }
         }
       });
+
+      io.to(`visitor_${session.id}`).emit("messages_read"); // notify visitor that their messages were read
     } else if (type === 'visitor') {
+      // Mark all messages as read up to this point (doesn't matter if session is invalid since it'll simply do nothing)
+      await prisma.message.updateMany({
+        where: {
+          sessionId: req.params.session, // find session based on id
+          token: token, // include secure token for visitors
+          senderId: { not: null }, // all the messages sent by agents
+          read: false
+        },
+        data: { read: true } // mark them as read
+      });
+
       // Get the data for the session
       session = await prisma.session.findUnique({
         where: { id: req.params.session, token: token }, // include secure token for visitors
@@ -520,6 +548,8 @@ app.post('/api/session/:session', async (req, res) => {
           }
         }
       });
+
+      io.to(`team_${session.teamId}`).emit("messages_read", { id: session.id }); // notify agents that visitor read messages 
     }
 
     if (!session) return res.status(404).json({ error: "We couldn't find this session. It may have been deleted." });
@@ -570,7 +600,7 @@ app.patch('/api/session/:session', async (req, res) => {
       if (room) {
         room.forEach(id => {
           const socket = io.sockets.sockets.get(id);
-          
+
           if (socket) {
             socket.disconnect(true);
           }

@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 function TestChat() {
     const DEFAULT_TEAM_ID = new URLSearchParams(window.location.search).get("workspace") || null;
     const [session, setSession] = useState(null);
+    const [auth, setAuth] = useState(null);
     const [messages, setMessages] = useState([]);
     const [socket, setSocket] = useState(null);
     const [toast, setToast] = useState(null);
@@ -25,9 +26,9 @@ function TestChat() {
             if (response.data) {
                 setSession(response.data);
                 setMessages(response.data.messages || []);
-                saveSession(response.data);
+                setAuth({ token: response.data.token, id: response.data.id });
 
-                connectSession(response.data);
+                connectSession();
                 return response.data;
             }
 
@@ -49,9 +50,9 @@ function TestChat() {
                 if (response.data && response.data.messages) {
                     setSession(response.data);
                     setMessages(response.data.messages || []);
-                    saveSession(data);
+                    setAuth({ token: data.token, id: data.id });
 
-                    connectSession(data);
+                    connectSession();
                     return response.data;
                 }
             },
@@ -65,16 +66,16 @@ function TestChat() {
         });
     };
 
-    const saveSession = (save) => {
-        if (!save || !save.token || !save.id) return;
-        localStorage.setItem("session", JSON.stringify({ token: save.token, id: save.id })); // save session
-    };
+    useEffect(() => {
+        if (!auth || !auth.token || !auth.id) return;
+        localStorage.setItem("session", JSON.stringify(auth)); // save session
+    }, [auth]);
 
-    const connectSession = (conn) => {
-        if (!conn) return;
+    const connectSession = () => {
+        if (!auth || !auth.token || !auth.id) return;
         if (socket) socket.disconnect();
 
-        const newSocket = io("http://localhost:3000/", { auth: { type: "visitor", token: conn.token, id: conn.id } });
+        const newSocket = io("http://localhost:3000/", { auth: { type: "visitor", token: auth.token, id: auth.id } });
         setSocket(newSocket);
         return newSocket;
     };
@@ -158,24 +159,28 @@ function TestChat() {
 
             const data = JSON.parse(saved);
             if (data && data.token && data.id) return getSession(data);
-        } catch {};
+        } catch { };
     }, []); // on mount
 
     const sendMessage = async () => {
+        let currentAuth = auth;
         let currentSession = session;
-        if (!currentSession) {
+
+        if (!currentAuth || !currentAuth.token || !currentAuth.id) {
+            // Try to create a session, which will also set auth
             currentSession = await createSession();
-            if (!currentSession) return; // failed to create session
+            currentAuth = { token: currentSession?.token, id: currentSession?.id };
+            if (!currentSession || !currentAuth.token || !currentAuth.id) return; // failed to create session
         }
 
-        if(currentSession.status === 'closed') return setToast({ id: "err-toast", type: "error", message: "This conversation has been closed. You are unable to make any changes.", onClose: () => setToast(null) });
+        if (currentSession && currentSession.status === 'closed') return setToast({ id: "err-toast", type: "error", message: "This conversation has been closed. You are unable to make any changes.", onClose: () => setToast(null) });
         const message = $("#message").val();
         if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 
         $.ajax({
-            url: `http://localhost:3000/api/session/${currentSession.id}/create`,
+            url: `http://localhost:3000/api/session/${currentAuth.id}/create`,
             method: 'POST',
-            data: { type: "visitor", token: currentSession.token, message: message },
+            data: { type: "visitor", token: currentAuth.token, message: message },
             success: function (response) {
                 setMessages(prevMessages => {
                     if (!prevMessages.find(m => m.id === response.data.id)) {

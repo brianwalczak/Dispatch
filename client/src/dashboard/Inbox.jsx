@@ -180,6 +180,15 @@ function Inbox({ user, onLoad, socket, setToast }) {
 
         // New message was sent by either an agent or a visitor
         const newMessage = (msg) => {
+            setSessions(prevSessions => {
+                if (!prevSessions.find(s => s.id === msg.sessionId)) return prevSessions;
+
+                // update latest message in sessions list
+                return prevSessions.map(s =>
+                    s.id === msg.sessionId ? { ...s, latestMessage: msg } : s
+                );
+            });
+
             setSelected(prevSelected => {
                 if (!prevSelected || msg.sessionId !== prevSelected) return prevSelected;
 

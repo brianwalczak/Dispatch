@@ -269,6 +269,9 @@ function Inbox({ user, onLoad, socket, setToast }) {
             // For new messages, use smooth scrolling cuz it's nicer
             end.scrollIntoView({ behavior: "smooth" });
         }
+
+        // update latest message in sessions list
+        setSessions(prevSessions => prevSessions.map(session => session.id === selected ? { ...session, latestMessage: messages[messages.length - 1] || null } : session));
     }, [messages]);
 
     useEffect(() => {

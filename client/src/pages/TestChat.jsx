@@ -134,14 +134,21 @@ function TestChat() {
             });
         };
 
+        // Acknowledge that agent has read messages
+        const messagesRead = () => {
+            setMessages(prevMessages => prevMessages.map(m => !(m.sender) ? { ...m, read: true } : m)); // mark all as read
+        };
+
         socket.on("new_message", newMessage);
         socket.on("session_delete", sessionDelete);
         socket.on("session_update", sessionUpdate);
+        socket.on("messages_read", messagesRead);
 
         return () => {
             socket.off("new_message", newMessage);
             socket.off("session_delete", sessionDelete);
             socket.off("session_update", sessionUpdate);
+            socket.off("messages_read", messagesRead);
 
             if (socket) {
                 socket.disconnect();

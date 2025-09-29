@@ -1,0 +1,22 @@
+services:
+  app:
+    image: dispatch
+    container_name: dispatch
+    ports:
+      - "7000:3000" # replace 7000 with desired port
+    volumes:
+      - ./data:/usr/src/app/data
+    environment:
+      DATABASE_URL: file:/usr/src/app/data/dispatch.db
+      SERVER_DOMAIN: https://app_dispatch.brian.icu/
+      CORS_ORIGIN: https://app_dispatch.brian.icu/
+      CORS_SOCKET_ORIGIN: false
+      SERVER_PORT: 3000
+
+      SMTP_HOSTNAME: mail.spacemail.com
+      SMTP_PORT: 465
+      SMTP_SECURE=: true
+
+      SMTP_USERNAME: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      SMTP_PASSWORD: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    restart: unless-stopped

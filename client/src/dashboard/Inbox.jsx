@@ -47,7 +47,14 @@ function Inbox({ user, onLoad, socket, setToast }) {
             data: { type: "agent", token: token, message: message },
             success: function (response) {
                 if (response.data) {
-                    setMessages([...messages, response.data]);
+                    setMessages(prevMessages => {
+                        if (!prevMessages.find(m => m.id === response.data.id)) {
+                            return [...prevMessages, response.data];
+                        }
+
+                        return prevMessages;
+                    });
+
                     setIsInitialLoad(false); // New message, not initial load
                 }
 

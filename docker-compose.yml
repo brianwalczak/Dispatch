@@ -8,8 +8,8 @@ services:
       - ./data:/usr/src/app/data
     environment:
       DATABASE_URL: file:/usr/src/app/data/dispatch.db
-      SERVER_DOMAIN: https://app_dispatch.brian.icu/
-      CORS_ORIGIN: https://app_dispatch.brian.icu/
+      SERVER_DOMAIN: https://app-dispatch.brian.icu/
+      CORS_ORIGIN: https://app-dispatch.brian.icu/
       CORS_SOCKET_ORIGIN: false
       SERVER_PORT: 3000
 

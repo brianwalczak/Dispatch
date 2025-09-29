@@ -772,6 +772,33 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  socket.on("messages_read", async (data) => {
+    // emit to other party that messages were read
+    if (type === "visitor") {
+      await prisma.message.updateMany({
+        where: {
+          sessionId: userId, // find session based on id
+          senderId: { not: null }, // all the messages sent by agents
+          read: false
+        },
+        data: { read: true } // mark them as read
+      });
+
+      io.to(`team_${teamId}`).emit("messages_read", { id: userId });
+    } else if (type === "agent") {
+      await prisma.message.updateMany({
+        where: {
+          sessionId: data?.id, // find session based on id
+          senderId: null, // all the messages sent by visitor
+          read: false
+        },
+        data: { read: true } // mark them as read
+      });
+
+      io.to(`visitor_${data?.id}`).emit("messages_read");
+    }
+  });
 });
 
 const dashboard = path.join(__dirname, 'client', 'dist');

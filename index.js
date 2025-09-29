@@ -531,7 +531,9 @@ app.post('/api/session/:session', async (req, res) => {
       await prisma.message.updateMany({
         where: {
           sessionId: req.params.session, // find session based on id
-          token: token, // include secure token for visitors
+          session: {
+            token: token // include secure token for visitors
+          },
           senderId: { not: null }, // all the messages sent by agents
           read: false
         },

@@ -12,7 +12,7 @@ const Header = React.forwardRef((props, ref) => (
                 <Link to="/#faq" className="text-gray-300 font-bold font-medium rounded-md px-3 py-1.5 border border-transparent hover:border-gray-400/30 hover:bg-white/20 hover:text-white transition">FAQ</Link>
             </nav>
 
-            <Link to="https://app.dispatch.brian.icu/" className="md:inline-block bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-red-700 transition">Get Started</Link>
+            <Link to="https://app_dispatch.brian.icu/" className="md:inline-block bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-red-700 transition">Get Started</Link>
         </div>
     </header>
 ));

@@ -18,7 +18,7 @@ function TestChat() {
     const createSession = async () => {
         try {
             const response = await $.ajax({
-                url: `http://localhost:3000/api/sessions/create`,
+                url: `/api/sessions/create`,
                 method: 'POST',
                 data: { teamId: DEFAULT_TEAM_ID },
             });
@@ -42,7 +42,7 @@ function TestChat() {
         if (!data || !data.token || !data.id) return;
 
         $.ajax({
-            url: `http://localhost:3000/api/session/${data.id}`,
+            url: `/api/session/${data.id}`,
             method: 'POST',
             data: { type: "visitor", token: data.token },
             success: function (response) {
@@ -68,7 +68,7 @@ function TestChat() {
         if (!auth || !auth.token || !auth.id) return;
         if (socket) socket.disconnect();
 
-        const newSocket = io("http://localhost:3000/", { auth: { type: "visitor", token: auth.token, id: auth.id } });
+        const newSocket = io("/", { auth: { type: "visitor", token: auth.token, id: auth.id } });
         setSocket(newSocket);
 
         localStorage.setItem("session", JSON.stringify(auth)); // save session
@@ -185,7 +185,7 @@ function TestChat() {
         if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 
         $.ajax({
-            url: `http://localhost:3000/api/session/${currentAuth.id}/create`,
+            url: `/api/session/${currentAuth.id}/create`,
             method: 'POST',
             data: { type: "visitor", token: currentAuth.token, message: message },
             success: function (response) {

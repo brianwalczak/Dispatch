@@ -64,7 +64,7 @@ function CreateWorkspace({ onLoad }) {
             <h2 className="text-3xl font-bold mb-2 text-gray-800">Create a Workspace</h2>
             <p className="text-gray-500 text-xl mb-6">Set up a new workspace for your company or team.</p>
 
-            <form action="http://localhost:3000/api/workspaces/new" method="POST" onChange={() => setStatus(null)} onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md">
+            <form action="/api/workspaces/new" method="POST" onChange={() => setStatus(null)} onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md">
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Workspace name</label>
                     <input type="text" name="name" id="name" className="block w-full rounded-lg px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400" disabled={submitting} placeholder="Enter a name for your workspace (e.g., Acme Inc.)" required />

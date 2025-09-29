@@ -44,7 +44,7 @@ function Dashboard({ type }) {
 
         // Fetch data for the user using the token (use ajax)
         $.ajax({
-            url: "http://localhost:3000/api/user/me",
+            url: "/api/user/me",
             method: "POST",
             data: { token: token, workspace: (localStorage.getItem("workspace") || null) },
             success: function (response) {
@@ -72,7 +72,7 @@ function Dashboard({ type }) {
 
     useEffect(() => {
         if (user && user.team && !socket) {
-            const newSocket = io("http://localhost:3000/", { auth: { type: "agent", token: token, teamId: user.team.id } });
+            const newSocket = io("/", { auth: { type: "agent", token: token, teamId: user.team.id } });
             setSocket(newSocket);
 
             newSocket.on("members", (count) => {

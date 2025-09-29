@@ -19,7 +19,7 @@ function Team({ user, onLoad, setToast }) {
         if (!confirm("Are you sure you want to remove this team member? This action cannot be undone.")) return;
 
         $.ajax({
-            url: `http://localhost:3000/api/workspaces/${user.team.id}/users/${userId}`,
+            url: `/api/workspaces/${user.team.id}/users/${userId}`,
             method: 'DELETE',
             data: { token: token },
             success: function (response) {
@@ -41,7 +41,7 @@ function Team({ user, onLoad, setToast }) {
 
     useEffect(() => {
         $.ajax({
-            url: `http://localhost:3000/api/workspaces/${user.team.id}`,
+            url: `/api/workspaces/${user.team.id}`,
             method: 'POST',
             data: { token: token },
             success: function (response) {

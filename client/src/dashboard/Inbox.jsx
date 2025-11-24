@@ -1,3 +1,5 @@
+import { api_url } from "../providers/config";
+// ------------------------------------------------------- //
 import { useState, useEffect } from "react";
 import { Dropdown, closeMenu } from "../components/Dropdown";
 
@@ -15,7 +17,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
         if (!selected || !socket) return;
 
         $.ajax({
-            url: `/api/session/${selected}`,
+            url: (api_url + `/api/session/${selected}`),
             method: 'POST',
             data: { type: "agent", token: token },
             success: function (response) {
@@ -42,7 +44,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
         if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
 
         $.ajax({
-            url: `/api/session/${selected}/create`,
+            url: (api_url + `/api/session/${selected}/create`),
             method: 'POST',
             data: { type: "agent", token: token, message: message },
             success: function (response) {
@@ -78,7 +80,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
         if (!selected || !socket) return;
 
         $.ajax({
-            url: `/api/session/${selected}`,
+            url: (api_url + `/api/session/${selected}`),
             method: 'PATCH',
             data: { token: token, status },
             success: function (response) {
@@ -128,7 +130,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
 
     useEffect(() => {
         $.ajax({
-            url: `/api/sessions/${user.team.id}`,
+            url: (api_url + `/api/sessions/${user.team.id}`),
             method: 'POST',
             data: { token: token },
             success: function (response) {

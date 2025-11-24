@@ -1,3 +1,5 @@
+import { api_url } from "../providers/config";
+// ------------------------------------------------------- //
 import { useEffect, useState } from "react";
 
 function Auth_Reset() {
@@ -64,7 +66,7 @@ function Auth_Reset() {
                 </p>
 
                 <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
-                    <form action="/api/auth/reset_password" method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
+                    <form action={`${api_url}/api/auth/reset_password`} method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
                         {step === 2 && (
                             <input type="hidden" name="reset_token" value={new URLSearchParams(window.location.search).get('token')} />
                         )}

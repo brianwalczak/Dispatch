@@ -1,3 +1,5 @@
+import { api_url, socket_url } from "../providers/config";
+// ------------------------------------------------------- //
 import { useState, useEffect } from "react";
 import { Dropdown, closeMenu } from "../components/Dropdown";
 import { io } from "socket.io-client";
@@ -44,7 +46,7 @@ function Dashboard({ type }) {
 
         // Fetch data for the user using the token (use ajax)
         $.ajax({
-            url: "/api/user/me",
+            url: (api_url + "/api/user/me"),
             method: "POST",
             data: { token: token, workspace: (localStorage.getItem("workspace") || null) },
             success: function (response) {
@@ -72,7 +74,7 @@ function Dashboard({ type }) {
 
     useEffect(() => {
         if (user && user.team && !socket) {
-            const newSocket = io("/", { auth: { type: "agent", token: token, teamId: user.team.id } });
+            const newSocket = io(socket_url, { auth: { type: "agent", token: token, teamId: user.team.id } });
             setSocket(newSocket);
 
             newSocket.on("members", (count) => {

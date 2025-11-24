@@ -1,3 +1,5 @@
+import { api_url } from "../providers/config";
+// ------------------------------------------------------- //
 import { useEffect, useState } from "react";
 
 function Auth() {
@@ -36,7 +38,7 @@ function Auth() {
                 <h2 className="mt-5 text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Sign in to your account</h2>
 
                 <div className="mt-5 sm:mt-15 sm:mx-auto sm:w-full sm:max-w-md">
-                    <form action="/api/auth/sign_in" method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
+                    <form action={`${api_url}/api/auth/sign_in`} method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-lg font-medium text-gray-900">Email address</label>
                             <div className="mt-2">

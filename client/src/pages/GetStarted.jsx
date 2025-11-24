@@ -1,3 +1,5 @@
+import { api_url } from "../providers/config";
+// ------------------------------------------------------- //
 import { useState, useEffect } from "react";
 
 function GetStarted() {
@@ -85,7 +87,7 @@ function GetStarted() {
                 try {
                     const [response, _] = await Promise.allSettled([
                         $.ajax({
-                            url: "/api/workspaces/new",
+                            url: (api_url + "/api/workspaces/new"),
                             method: "POST",
                             data: {
                                 name: `${(name.split(" ")[0] + "'s") || "Personal"} Workspace`,
@@ -143,7 +145,7 @@ function GetStarted() {
                     </p>
 
                     <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
-                        <form action="/api/auth/sign_up" method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
+                        <form action={`${api_url}/api/auth/sign_up`} method="POST" className="space-y-6" onChange={() => setStatus(null)} onSubmit={handleSubmit}>
                             {step === 1 && (
                                 <div>
                                     <label htmlFor="name" className="block text-lg font-medium text-gray-900">Full Name</label>

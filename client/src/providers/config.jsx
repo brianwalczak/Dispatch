@@ -1,6 +1,6 @@
 const config = {
-    api: "http://localhost:3000",
-    socket: "localhost:3001"
+    api: null,
+    socket: null
 };
 
 const api_url = (config.api || "");

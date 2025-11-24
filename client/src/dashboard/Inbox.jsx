@@ -10,7 +10,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
 
     const [filter, setFilter] = useState("open"); // "open" or "closed"
     const [selected, setSelected] = useState(null); // session ID
-    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [token] = useState(localStorage.getItem("token"));
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     const getMessages = () => {
@@ -424,7 +424,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
                             </div>
 
                             <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">All caught up! 🎉</h3>
-                            <p className="text-sm sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2">Amazing work, <span className="font-semibold text-blue-600">{user.name.split(" ")[0]}</span>! You've handled all your conversations like a pro.</p>
+                            <p className="text-sm sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2">Amazing work, <span className="font-semibold text-blue-600">{user.name.split(" ")[0]}</span>! You&apos;ve handled all your conversations like a pro.</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-8 w-full max-w-4xl">
@@ -436,7 +436,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
                                 </div>
 
                                 <h4 className="font-semibold text-gray-900 text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Take a break</h4>
-                                <p className="text-gray-600 text-xs sm:text-sm">You've earned some time to stay alert for new conversations. Great work!</p>
+                                <p className="text-gray-600 text-xs sm:text-sm">You&apos;ve earned some time to stay alert for new conversations. Great work!</p>
                             </div>
 
                             <div className="flex flex-col items-center text-center bg-green-50 border border-green-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8">

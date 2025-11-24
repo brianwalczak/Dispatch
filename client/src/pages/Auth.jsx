@@ -1,6 +1,6 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function Auth() {
     const [status, setStatus] = useState(null);

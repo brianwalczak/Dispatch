@@ -42,7 +42,7 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
             <div ref={btn} type={type} {...eventProps} className={className}>{buttonChild}</div>
 
             {isOpen && (
-                <div ref={menu} type={type} menu="true" className={`absolute w-52 bg-white shadow-xl rounded-xl z-50 flex flex-col p-2 ${position}`}>
+                <div ref={menu} type={type} data-menu="true" className={`absolute w-52 bg-white shadow-xl rounded-xl z-50 flex flex-col p-2 ${position}`}>
                     {menuChild}
                     <button type="button" className="hidden menu-close" onClick={() => setIsOpen(false)} />
                 </div>
@@ -52,7 +52,7 @@ function Dropdown({ children, type, className, position = 'left-[52px]', open = 
 }
 
 function closeMenu(type) {
-    const menu = document.querySelector(`div[type="${type}"][menu="true"]`);
+    const menu = document.querySelector(`div[type="${type}"][data-menu="true"]`);
     menu?.querySelector("button.menu-close")?.click();
 }
 

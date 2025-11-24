@@ -66,7 +66,7 @@ function GetStarted() {
             // Create the user account first
             if (createStep === 1) {
                 try {
-                    const [response, _] = await Promise.allSettled([
+                    const [response] = await Promise.allSettled([
                         $.ajax(form),
                         new Promise(r => setTimeout(r, 2500)) // minimum 2.5s wait
                     ]);
@@ -85,7 +85,7 @@ function GetStarted() {
             // Create the personal workspace after account creation
             if (createStep === 2) {
                 try {
-                    const [response, _] = await Promise.allSettled([
+                    const [response] = await Promise.allSettled([
                         $.ajax({
                             url: (api_url + "/api/workspaces/new"),
                             method: "POST",

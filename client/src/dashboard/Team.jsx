@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 function Team({ user, onLoad, setToast }) {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
-    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [token] = useState(localStorage.getItem("token"));
 
     function getInitials(name) {
         return name

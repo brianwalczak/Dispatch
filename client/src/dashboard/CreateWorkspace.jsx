@@ -6,7 +6,7 @@ function CreateWorkspace({ onLoad }) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState("");
-    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [token] = useState(localStorage.getItem("token"));
 
     useEffect(() => {
         setLoading(false);
@@ -43,7 +43,7 @@ function CreateWorkspace({ onLoad }) {
 
         setSubmitting(true);
 
-        const [response, _] = await Promise.allSettled([
+        const [response] = await Promise.allSettled([
             $.ajax({
                 url: $(e.target).attr('action'),
                 method: $(e.target).attr('method'),

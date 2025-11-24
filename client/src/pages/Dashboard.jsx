@@ -18,7 +18,7 @@ function Dashboard({ type }) {
     const [page, setPage] = useState(type || DEFAULT_PAGE);
     const [pageLoaded, setPageLoaded] = useState(false);
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [token] = useState(localStorage.getItem("token"));
     const [toast, setToast] = useState(null);
     const [socket, setSocket] = useState(null);
     const [members, setMembers] = useState(1); // number of connected agents, themselves by default

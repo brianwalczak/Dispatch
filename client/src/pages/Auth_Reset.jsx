@@ -24,7 +24,7 @@ function Auth_Reset() {
             url: $(e.target).attr('action'),
             method: $(e.target).attr('method'),
             data: $(e.target).serialize(),
-            success: function (response) {
+            success: function () {
                 setSuccess(true);
 
                 if(step === 1) {

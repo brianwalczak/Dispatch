@@ -168,7 +168,7 @@ function TestChat() {
 
             const data = JSON.parse(saved);
             if (data && data.token && data.id) return getSession(data);
-        } catch { };
+        } catch {/* ignore */};
     }, []); // on mount
 
     const sendMessage = async () => {

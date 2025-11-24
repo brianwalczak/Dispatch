@@ -40,8 +40,8 @@ function DemoModal() {
 
                 <div className="mb-6">
                     <p className="text-gray-600 leading-relaxed mb-4">Hello there! Thanks for checking out my project. 👋</p>
-                    <p className="text-gray-600 leading-relaxed mb-4">Dispatch is still under construction, but I'd love to show you what I've built so far! This is a team communication platform designed to streamline customer interactions, but without all the AI junk and useless features in the other services, like Intercom.</p>
-                    <p className="text-gray-600 leading-relaxed">Would you like to demo the chat functionality as a site visitor to test out your workspace? I'll open it in a new tab for you :D</p>
+                    <p className="text-gray-600 leading-relaxed mb-4">Dispatch is still under construction, but I&apos;d love to show you what I&apos;ve built so far! This is a team communication platform designed to streamline customer interactions, but without all the AI junk and useless features in the other services, like Intercom.</p>
+                    <p className="text-gray-600 leading-relaxed">Would you like to demo the chat functionality as a site visitor to test out your workspace? I&apos;ll open it in a new tab for you :D</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -53,7 +53,7 @@ function DemoModal() {
                     </button>
                 </div>
 
-                <p className="text-xs text-gray-400 text-center mt-4">This modal won't show again after you dismiss it, choose wisely!</p>
+                <p className="text-xs text-gray-400 text-center mt-4">This modal won&apos;t show again after you dismiss it, choose wisely!</p>
             </div>
         </div>
     );

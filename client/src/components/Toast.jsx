@@ -4,14 +4,16 @@ const FADE_DURATION = 300; // ms
 
 const Toast = ({ id, type, message, seconds = 2, onClose }) => {
     const [visible, setVisible] = useState(false);
-    const [status, setStatus] = useState(null);
 
     // used to trigger fade in animation
     useEffect(() => {
         const id = requestAnimationFrame(() => setVisible(true));
 
         if(seconds) {
-            const timer = setTimeout(() => setStatus(true), (seconds * 1000) + FADE_DURATION);
+            const timer = setTimeout(() => {
+                setVisible(false);
+                if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
+            }, (seconds * 1000) + FADE_DURATION);
             
             return () => {
                 clearTimeout(timer);
@@ -22,21 +24,9 @@ const Toast = ({ id, type, message, seconds = 2, onClose }) => {
         return () => cancelAnimationFrame(id);
     }, []); // on mount
 
-    // used to trigger fade out animation and call onClose callback
-    useEffect(() => {
-        if(status === null) return;
-        setVisible(false);
-    
-        if (onClose) {
-            const timer = setTimeout(() => onClose(), FADE_DURATION);
-                
-            return () => clearTimeout(timer);
-        }
-    }, [status]); // on status change (triggered close)
-
     {/* https://flowbite.com/docs/components/toast (modified file) */}
     return (
-        <div id={id} className={`toast fixed top-4 right-4 z-[9999] flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800 ${visible ? 'visible' : ''}`}>
+        <div id={id} className={`fixed top-4 right-4 z-[9999] flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             {type === "success" && (
                 <div className="inline-flex items-center justify-center shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
                     <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">

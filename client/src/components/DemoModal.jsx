@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 const FADE_DURATION = 150; // ms
 
 function DemoModal() {
+    const [ready, setReady] = useState(false);
     const [visible, setVisible] = useState(false);
 
     // used to trigger fade in animation
@@ -10,20 +11,30 @@ function DemoModal() {
         const hasSeen = localStorage.getItem('seenDemo');
 
         if (!hasSeen) {
-            let id = null;
-
             setTimeout(() => {
-                id = requestAnimationFrame(() => setVisible(true));
+                setReady(true);
             }, 500); // delay so it's neater :]
-
-            return () => cancelAnimationFrame(id);
         }
     }, []); // on mount
+
+    // trigger fade in after set as ready
+    useEffect(() => {
+        if (ready) {
+            const id = requestAnimationFrame(() => {
+                requestAnimationFrame(() => setVisible(true));
+            });
+            
+            return () => cancelAnimationFrame(id);
+        }
+    }, [ready]);
 
     const handleClose = () => {
         setVisible(false);
         localStorage.setItem('seenDemo', 'true');
+        setTimeout(() => setReady(false), FADE_DURATION);
     };
+
+    if (!ready) return null;
 
     return (
         <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

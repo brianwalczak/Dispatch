@@ -538,7 +538,12 @@ app.post('/api/invites/:id', async (req, res) => {
       return res.status(404).json({ error: "Whoops, it looks like the workspace for this invite no longer exists." });
     }
 
-    res.json({ success: true, data: { email: invite.email, expiresAt: invite.expiresAt, team: {
+    // Check if a user exists with the invite email
+    const user = await prisma.user.findUnique({
+      where: { email: invite.email }
+    });
+
+    res.json({ success: true, data: { email: invite.email, isUser: !!user, expiresAt: invite.expiresAt, team: {
       // only include necessary info to prevent extra data leak, that'd suck lol
       name: invite.team.name,
       description: invite.team.description

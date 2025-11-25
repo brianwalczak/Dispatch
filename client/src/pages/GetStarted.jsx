@@ -119,7 +119,10 @@ function GetStarted() {
 
             // Final step, redirect to dashboard
             if (createStep === 4) {
-                setTimeout(() => window.location.reload(), 2500);
+                const redirect_url = params.get('redirect_url');
+                const url = redirect_url ? decodeURIComponent(redirect_url) : null;
+
+                setTimeout(() => window.location.href = (url?.startsWith('/') ? url : '/'), 2500);
             }
         };
 

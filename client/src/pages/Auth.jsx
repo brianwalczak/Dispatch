@@ -1,10 +1,12 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
+import { useSearchParams } from 'react-router-dom';
 import { useState } from "react";
 
 function Auth() {
     const [status, setStatus] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [params] = useSearchParams();
 
     const handleSubmit = function (e) {
         e.preventDefault();
@@ -18,7 +20,11 @@ function Auth() {
                 setStatus("You are now signed in. Redirecting you to your dashboard...");
 
                 localStorage.setItem('token', response.token);
-                return setTimeout(() => window.location.reload(), 1500);
+
+                const redirect_url = params.get('redirect_url');
+                const url = redirect_url ? decodeURIComponent(redirect_url) : null;
+
+                setTimeout(() => window.location.href = (url?.startsWith('/') ? url : '/'), 1500);
             },
             error: function (xhr) {
                 setSuccess(false);

@@ -64,7 +64,24 @@ function Invite({ id, token: tokenI }) {
 
     if (error) {
         return (
-            {/* gonna do it later lol */}
+            <div className="min-h-screen bg-[#eff1ea] flex items-center justify-center p-4">
+                <div className="bg-white/70 rounded-2xl shadow-lg max-w-md w-full mx-4 p-6 border border-gray-400/30">
+                    <div className="flex flex-col items-center justify-between mb-5">
+                        <div className="w-20 h-20 bg-red-500/90 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-12 text-white">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                            </svg>
+                        </div>
+
+                        <h2 className="text-2xl font-semibold mb-3 text-center">Couldn't accept invite.</h2>
+                        <p className="text-base text-gray-500 text-center mb-2">{error}</p>
+                    </div>
+
+                    <div className="flex">
+                        <button onClick={() => window.location.href = "/"} className="flex-1 px-4 py-2.5 cursor-pointer bg-black/80 hover:bg-black/90 text-white rounded-xl font-medium transition">Go Home</button>
+                    </div>
+                </div>
+            </div>
         );
     }
 

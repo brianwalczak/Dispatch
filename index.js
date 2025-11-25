@@ -401,6 +401,275 @@ app.delete('/api/workspaces/:team/users/:user', async (req, res) => {
   }
 });
 
+// -- Invite Routes -- //
+app.post('/api/invites', async (req, res) => {
+  const { token, teamId } = req.body;
+
+  if (!token || !teamId) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Check if the user is part of the team
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: teamId,
+        users: {
+          some: { id: valid.userId }
+        }
+      }
+    });
+
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+
+    // Get all invites for the team
+    const invites = await prisma.teamInvite.findMany({
+      where: { teamId },
+      select: {
+        id: true,
+        email: true,
+        expiresAt: true
+      }
+    });
+
+    res.json({ success: true, data: invites });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/invites/new', async (req, res) => {
+  const { token, teamId, email } = req.body;
+
+  if (!token || !teamId || !email) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email.match(emailRegex) || email.length > 255) {
+    return res.status(400).json({ success: false, error: "Please provide a valid email address." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Check if the user is part of the team
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: teamId, // find workspace based on id
+        users: {
+          some: { id: valid.userId } // user is part of the team
+        }
+      },
+      include: { users: true } // include users in the workspace
+    });
+
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+    if (workspace.users.some(u => u.email === email.toLowerCase())) { // user to be added is already part of the team
+      return res.status(404).json({ error: "It looks like this user is already in your workspace." });
+    }
+
+    // Create the invite
+    const invite = await prisma.teamInvite.create({
+      data: {
+        email: email.toLowerCase(),
+        token: crypto.randomBytes(64).toString("hex"),
+        expiresAt: DateTime.utc().plus({ days: 7 }).toJSDate(),
+        teamId: teamId
+      }
+    });
+    
+    res.json({ success: true, id: invite.id });
+
+    try {
+      const url = process.env.SERVER_DOMAIN ? `${process.env.SERVER_DOMAIN}/invites/${invite.id}/?token=${invite.token}` : `http://localhost:${PORT}/invites/${invite.id}/?token=${invite.token}`;
+
+      await transporter.sendMail({
+        from: `"Dispatch" <${process.env.SMTP_USERNAME}>`,
+        to: email,
+        subject: `You've been invited to ${workspace.name} on Dispatch.`,
+        text: `Hello there,\n\nYou've been invited to join the workspace "${workspace.name}" on Dispatch. To accept the invite and join the team, please use the following link: ${url}\nThis invite will expire in 7 days.\n\nThanks for using Dispatch.`
+      });
+    } catch { };
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/invites/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Find the invite
+    const invite = await prisma.teamInvite.findUnique({
+      where: { id },
+      include: { team: true }
+    });
+
+    // Check if invite exists
+    if (!invite) {
+      return res.status(404).json({ error: "Whoops, your invite is no longer valid or has already been accepted." });
+    }
+
+    // Check if invite has expired
+    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt)) {
+      await prisma.teamInvite.delete({ where: { id } }); // clean up expired invite
+      return res.status(400).json({ error: "Sorry, your invite has already expired. Please request a new one from the workspace owner." });
+    }
+
+    // Ensure the workspace still exists
+    if (!invite.team) {
+      await prisma.teamInvite.delete({ where: { id } }); // clean up invite with no workspace
+      return res.status(404).json({ error: "Whoops, it looks like the workspace for this invite no longer exists." });
+    }
+
+    res.json({ success: true, data: { email: invite.email, expiresAt: invite.expiresAt, team: {
+      // only include necessary info to prevent extra data leak, that'd suck lol
+      name: invite.team.name,
+      description: invite.team.description
+    }}});
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.delete('/api/invites/:id', async (req, res) => {
+  const { token } = req.body;
+  const { id } = req.params;
+
+  if (!token || !id) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Find the invite
+    const invite = await prisma.teamInvite.findUnique({
+      where: { id }
+    });
+
+    if (!invite) {
+      return res.json({ success: true }); // invite already doesn't exist, so consider it deleted
+    }
+
+    // Check if the user is part of the team
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: invite.teamId, // find workspace based on id
+        users: {
+          some: { id: valid.userId } // user is part of the team
+        }
+      }
+    });
+
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+    await prisma.teamInvite.delete({ where: { id } });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/invites/:id/accept', async (req, res) => {
+  const { token } = req.body;
+  const { id } = req.params;
+  const { token: inviteToken } = req.query;
+
+  if (!token || !id || !inviteToken) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Find the invite
+    const invite = await prisma.teamInvite.findUnique({
+      where: { id, token: inviteToken },
+      include: { team: true }
+    });
+
+    // Check if invite exists
+    if (!invite) {
+      return res.status(404).json({ error: "Whoops, your invite is no longer valid or has already been accepted." });
+    }
+
+    // Check if invite has expired
+    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt)) {
+      await prisma.teamInvite.delete({ where: { id } }); // clean up expired invite
+      return res.status(400).json({ error: "Sorry, your invite has already expired. Please request a new one from the workspace owner." });
+    }
+
+    // Ensure the workspace still exists
+    if (!invite.team) {
+      await prisma.teamInvite.delete({ where: { id } }); // clean up invite with no workspace
+      return res.status(404).json({ error: "Whoops, it looks like the workspace for this invite no longer exists." });
+    }
+
+    // Find the user accepting the invite
+    const user = await prisma.user.findFirst({
+      where: {
+        id: valid.userId
+      },
+      include: { teams: true }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Check if the email on the invite matches the user's email
+    if (user.email.toLowerCase() !== invite.email.toLowerCase()) {
+      return res.status(400).json({ error: "You are unable to accept this invite under your current email address." });
+    }
+
+    // Ensure the user is not already a member
+    if (user.teams.some(t => t.id === invite.teamId)) {
+      return res.json({ success: true, id: invite.teamId }); // just return success if already a member
+    }
+
+    // Add user to team and delete the invite
+    await prisma.team.update({
+      where: { id: invite.teamId },
+      data: {
+        users: {
+          connect: { id: valid.userId }
+        }
+      }
+    });
+
+    // delete all invites for this email and team (in-case multiple were sent)
+    await prisma.teamInvite.deleteMany({ where: { email: invite.email, teamId: invite.teamId } });
+    res.json({ success: true, id: invite.teamId });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 // -- Sessions/Messages Routes -- //
 app.post('/api/sessions/create', async (req, res) => {
   // this is visitors only, so we're assuming this is a new visitor
@@ -811,10 +1080,16 @@ const dashboard = path.join(__dirname, 'client', 'dist');
 server.listen(PORT, () => {
   console.log(`${chalk.green('[SERVER]')} Server is running on http://localhost:${PORT}`);
 
-  // remove expired tokens every 10 minutes
+  // remove expired tokens/invites every 10 minutes
   setInterval(async () => {
     try {
       await prisma.userToken.deleteMany({
+        where: {
+          expiresAt: { lt: DateTime.utc().toJSDate() }
+        }
+      });
+
+      await prisma.teamInvite.deleteMany({
         where: {
           expiresAt: { lt: DateTime.utc().toJSDate() }
         }

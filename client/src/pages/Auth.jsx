@@ -55,7 +55,7 @@ function Auth() {
                         <div>
                             <div className="flex items-center justify-between">
                                 <label htmlFor="password" className="block text-lg font-medium text-gray-900">Password</label>
-                                <div className="text-medium">
+                                <div className="text-base">
                                     <a href="/auth/reset_password" className="font-semibold text-red-600 hover:text-red-500">Forgot password?</a>
                                 </div>
                             </div>

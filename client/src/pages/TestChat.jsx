@@ -233,7 +233,7 @@ function TestChat() {
                             </svg>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-med">Conversation Demo (Dispatch)</h3>
+                            <h3 className="font-semibold text-base">Conversation Demo (Dispatch)</h3>
                         </div>
                     </div>
                 </div>

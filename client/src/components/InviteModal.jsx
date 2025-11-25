@@ -37,7 +37,7 @@ function InviteModal({ user, token, setToast, onClose }) {
             data: { token, teamId: user.team.id, email: email.trim() },
             success: function (response) {
                 if (response.success) {
-                    setToast({ id: "success-toast", type: "success", message: `Your invite has been successfully sent to <b>${email.trim()}</b>.`, onClose: () => setToast(null) });
+                    setToast({ id: "success-toast", type: "success", message: `An invite to join ${user.team.name} has been sent successfully.`, onClose: () => setToast(null) });
                     handleClose();
                 }
             },

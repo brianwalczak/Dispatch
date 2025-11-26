@@ -21,7 +21,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
             method: 'POST',
             data: { type: "agent", token: token },
             success: function (response) {
-                if (response.data && response.data.messages) {
+                if (response.success && response.data && response.data.messages) {
                     setMessages(response.data.messages);
                     setIsInitialLoad(true);
                 }
@@ -48,7 +48,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
             method: 'POST',
             data: { type: "agent", token: token, message: message },
             success: function (response) {
-                if (response.data) {
+                if (response.success && response.data) {
                     setMessages(prevMessages => {
                         if (!prevMessages.find(m => m.id === response.data.id)) {
                             return [...prevMessages, response.data];
@@ -84,7 +84,7 @@ function Inbox({ user, onLoad, socket, setToast }) {
             method: 'PATCH',
             data: { token: token, status },
             success: function (response) {
-                if (response.success) {
+                if (response.success && response.data) {
                     // Predict the next session in the list (preferably the next one, otherwise the previous one)
                     const tabSessions = sessions.filter(session => session.status === filter);
                     const index = tabSessions.findIndex(session => session.id === selected);
@@ -134,8 +134,10 @@ function Inbox({ user, onLoad, socket, setToast }) {
             method: 'POST',
             data: { token: token },
             success: function (response) {
-                setSessions(response.data);
-                setSelected(response.data?.find(session => session.status === 'open')?.id || null); // try to find first open session
+                if (response.success && response.data) {
+                    setSessions(response.data);
+                    setSelected(response.data?.find(session => session.status === 'open')?.id || null); // try to find first open session
+                }
             },
             error: function (xhr) {
                 if (xhr.status === 401) {

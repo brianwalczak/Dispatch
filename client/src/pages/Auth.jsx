@@ -16,15 +16,17 @@ function Auth() {
             method: $(e.target).attr('method'),
             data: $(e.target).serialize(),
             success: function (response) {
-                setSuccess(true);
-                setStatus("You are now signed in. Redirecting you to your dashboard...");
+                if (response.success && response.token) {
+                    setSuccess(true);
+                    setStatus("You are now signed in. Redirecting you to your dashboard...");
 
-                localStorage.setItem('token', response.token);
+                    localStorage.setItem('token', response.token);
 
-                const redirect_url = params.get('redirect_url');
-                const url = redirect_url ? decodeURIComponent(redirect_url) : null;
+                    const redirect_url = params.get('redirect_url');
+                    const url = redirect_url ? decodeURIComponent(redirect_url) : null;
 
-                setTimeout(() => window.location.href = (url?.startsWith('/') ? url : '/'), 1500);
+                    setTimeout(() => window.location.href = (url?.startsWith('/') ? url : '/'), 1500);
+                }
             },
             error: function (xhr) {
                 setSuccess(false);

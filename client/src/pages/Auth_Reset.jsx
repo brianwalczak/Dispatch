@@ -24,14 +24,16 @@ function Auth_Reset() {
             url: $(e.target).attr('action'),
             method: $(e.target).attr('method'),
             data: $(e.target).serialize(),
-            success: function () {
-                setSuccess(true);
+            success: function (response) {
+                if (response.success) {
+                    setSuccess(true);
 
-                if(step === 1) {
-                    setStatus("If an account with that email exists, a password reset link has been sent.");
-                } else if(step === 2) {
-                    setStatus("Your password has been successfully reset. Redirecting you to the login page...");
-                    return setTimeout(() => window.location.href = "/auth/sign_in", 1500);
+                    if(step === 1) {
+                        setStatus("If an account with that email exists, a password reset link has been sent.");
+                    } else if(step === 2) {
+                        setStatus("Your password has been successfully reset. Redirecting you to the login page...");
+                        return setTimeout(() => window.location.href = "/auth/sign_in", 1500);
+                    }
                 }
             },
             error: function (xhr) {

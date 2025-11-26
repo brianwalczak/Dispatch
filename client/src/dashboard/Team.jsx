@@ -51,7 +51,7 @@ function Team({ user, onLoad, setToast }) {
             method: 'POST',
             data: { token: token },
             success: function (response) {
-                if (response.data) {
+                if (response.success && response.data) {
                     let fetchedUsers = response.data.users || [];
 
                     // Ensure you're always at the top

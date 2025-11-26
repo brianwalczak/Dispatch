@@ -191,16 +191,18 @@ function TestChat() {
             method: 'POST',
             data: { type: "visitor", token: currentAuth.token, message: message },
             success: function (response) {
-                setMessages(prevMessages => {
-                    if (!prevMessages.find(m => m.id === response.data.id)) {
-                        return [...prevMessages, response.data];
-                    }
+                if (response.success && response.data) {
+                    setMessages(prevMessages => {
+                        if (!prevMessages.find(m => m.id === response.data.id)) {
+                            return [...prevMessages, response.data];
+                        }
 
-                    return prevMessages;
-                });
+                        return prevMessages;
+                    });
 
-                $("#message").val("");
-                $("#message").css("height", "auto");
+                    $("#message").val("");
+                    $("#message").css("height", "auto");
+                }
             },
             error: function (xhr) {
                 if (xhr.status === 401 || xhr.status === 404) {

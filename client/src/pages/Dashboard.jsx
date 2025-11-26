@@ -50,16 +50,18 @@ function Dashboard({ type }) {
             method: "POST",
             data: { token: token, workspace: (localStorage.getItem("workspace") || null) },
             success: function (response) {
-                let workspace = localStorage.getItem("workspace");
+                if (response.success && response.data) {
+                    let workspace = localStorage.getItem("workspace");
 
-                if ((!workspace || !response.data.teams.some(t => t.id === workspace)) && response.data.lastOpenedId) {
-                    workspace = response.data.lastOpenedId;
-                    localStorage.setItem("workspace", response.data.lastOpenedId);
+                    if ((!workspace || !response.data.teams.some(t => t.id === workspace)) && response.data.lastOpenedId) {
+                        workspace = response.data.lastOpenedId;
+                        localStorage.setItem("workspace", response.data.lastOpenedId);
+                    }
+
+                    response.data.team = response.data.teams.find(t => t.id === workspace) || null;
+                    if (!response.data.team && page !== "create_workspace") return switchPage("create_workspace");
+                    setUser(response.data);
                 }
-
-                response.data.team = response.data.teams.find(t => t.id === workspace) || null;
-                if (!response.data.team && page !== "create_workspace") return switchPage("create_workspace");
-                setUser(response.data);
             },
             error: function (xhr) {
                 if (xhr.status === 401) {

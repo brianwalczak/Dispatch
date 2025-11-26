@@ -2,12 +2,14 @@ import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
 import { useState, useEffect } from "react";
 import InviteModal from "../components/InviteModal";
+import InvitePendingModal from "../components/InvitePendingModal";
 
 function Team({ user, onLoad, setToast }) {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
     const [token] = useState(localStorage.getItem("token"));
     const [showInvite, setShowInvite] = useState(false);
+    const [showPending, setShowPending] = useState(false);
 
     function getInitials(name) {
         return name
@@ -89,6 +91,10 @@ function Team({ user, onLoad, setToast }) {
                 <InviteModal user={user} token={token} onClose={() => setShowInvite(false)} setToast={setToast} />
             )}
 
+            {showPending && (
+                <InvitePendingModal user={user} token={token} onClose={() => setShowPending(false)} setToast={setToast} />
+            )}
+
             <div className="flex flex-col w-full h-full justify-start bg-white border border-gray-300 rounded-2xl py-4">
                 <div className="flex items-center justify-between pb-4 px-6 mb-4 border-b border-gray-300">
                     <div>
@@ -98,12 +104,21 @@ function Team({ user, onLoad, setToast }) {
                         </p>
                     </div>
 
-                    <button onClick={() => setShowInvite(true)} className="cursor-pointer px-4 py-2 bg-black/80 hover:bg-black/90 text-white rounded-xl text-sm font-medium transition flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Invite Member
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setShowPending(true)} className="cursor-pointer px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition flex items-center gap-1.5 border border-gray-200">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Pending
+                        </button>
+
+                        <button onClick={() => setShowInvite(true)} className="cursor-pointer px-4 py-2 bg-black/80 hover:bg-black/90 text-white rounded-xl text-sm font-medium transition flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Invite Member
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-6">
@@ -111,7 +126,7 @@ function Team({ user, onLoad, setToast }) {
                         {users.map(member => (
                             <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-lg">{getInitials(member.name)}</div>
+                                    <div className="w-12 h-12 bg-black/80 rounded-full flex items-center justify-center text-white font-semibold text-lg">{getInitials(member.name)}</div>
 
                                     <div className="flex flex-col">
                                         <div className="flex items-center gap-2">

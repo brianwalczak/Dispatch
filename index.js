@@ -1021,8 +1021,8 @@ io.on("connection", (socket) => {
     if (!teamMap.has(userId)) teamMap.set(userId, new Set());
     teamMap.get(userId).add(socket.id);
 
-    // emit unique agent count to their team
-    io.to(`team_${teamId}`).emit("members", teamMap.size);
+    // emit array of team member ids to their team
+    io.to(`team_${teamId}`).emit("members", Array.from(teamMap.keys()));
   }
 
   socket.on("disconnect", () => {
@@ -1039,7 +1039,7 @@ io.on("connection", (socket) => {
         teamMap.delete(userId); // remove user entirely if no sockets left
       }
 
-      io.to(`team_${teamId}`).emit("members", teamMap.size); // emit updated count first
+      io.to(`team_${teamId}`).emit("members", Array.from(teamMap.keys())); // emit updated array of online members
 
       if (teamMap.size === 0) {
         agents.delete(teamId); // remove team entirely if no agents left

@@ -23,7 +23,7 @@ function Dashboard({ type }) {
     const [token] = useState(localStorage.getItem("token"));
     const [toast, setToast] = useState(null);
     const [socket, setSocket] = useState(null);
-    const [members, setMembers] = useState(1); // number of connected agents, themselves by default
+    const [members, setMembers] = useState([]); // array of connected agents
 
     function getInitials(name) {
         return name
@@ -88,8 +88,8 @@ function Dashboard({ type }) {
             const newSocket = io(socket_url, { auth: { type: "agent", token: token, teamId: user.team.id } });
             setSocket(newSocket);
 
-            newSocket.on("members", (count) => {
-                setMembers(count);
+            newSocket.on("members", (members) => {
+                setMembers(members);
             });
 
             return () => {
@@ -222,18 +222,18 @@ function Dashboard({ type }) {
             </div>
 
             <div className="flex-1 h-full p-2 pl-0 box-border flex flex-col">
-                <div className="bg-white text-gray-600 flex items-center justify-center border border-gray-400/30 rounded-2xl h-12 mb-2">
+                <div className="bg-white text-gray-600 flex items-center justify-center border border-gray-300 rounded-2xl h-12 mb-2">
                     <p><b>Team:</b> {user && user.team ? user.team.name : "No Team Selected"}</p>
                     <div className="w-px h-6 bg-gray-300 mx-4"></div>
                     <div className="flex items-center">
                         <div className={`w-2 h-2 ${socket ? 'bg-green-400' : 'bg-gray-400'} rounded-full mr-2`}></div>
-                        <p>{socket ? (members ? `${members} agent${members === 1 ? '' : 's'} connected.` : "You are connected.") : (user && user.team ? "Connecting, please wait..." : "You are not connected.")}</p>
+                        <p>{socket ? (`${members.length} agent${members.length === 1 ? '' : 's'} connected.`) : (user && user.team ? "Connecting, please wait..." : "You are not connected.")}</p>
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-hidden">
                     {!pageLoaded && (
-                        <div className="bg-white border border-gray-400/30 rounded-2xl h-full">
+                        <div className="bg-white border border-gray-300 rounded-2xl h-full">
                             <div className="flex flex-col items-center text-gray-500 justify-center h-full">
                                 <div className="w-16 h-16 border-6 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-3"></div>
                                 <p className="text-xl font-medium">{!user ? "Loading, this won't take long..." : `Welcome back, ${user.name.split(" ")[0]}!`}</p>
@@ -242,7 +242,7 @@ function Dashboard({ type }) {
                     )}
 
                     {user && page === "create_workspace" && <CreateWorkspace onLoad={() => setPageLoaded(true)} />}
-                    {user && user.team && page === "home" && <Home user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
+                    {user && user.team && page === "home" && <Home user={user} members={members} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                     {user && user.team && page === "inbox" && <Inbox user={user} onLoad={() => setPageLoaded(true)} socket={socket} setToast={setToast} />}
                     {user && user.team && page === "analytics" && <Analytics user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                     {user && user.team && page === "team" && <Team user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}

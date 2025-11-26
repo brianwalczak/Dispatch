@@ -59,7 +59,14 @@ function Dashboard({ type }) {
                     }
 
                     response.data.team = response.data.teams.find(t => t.id === workspace) || null;
-                    if (!response.data.team && page !== "create_workspace") return switchPage("create_workspace");
+                    if (!response.data.team) {
+                        if (localStorage.getItem("workspace") !== null) {
+                            localStorage.removeItem("workspace"); // might be stale
+                            return window.location.reload();
+                        } else if (page !== "create_workspace") {
+                            return switchPage("create_workspace");
+                        }
+                    }
                     setUser(response.data);
                 }
             },

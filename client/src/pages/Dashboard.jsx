@@ -6,14 +6,16 @@ import { io } from "socket.io-client";
 import Toast from '../components/Toast.jsx';
 
 import CreateWorkspace from "../dashboard/CreateWorkspace";
+import Home from "../dashboard/Home";
 import Inbox from "../dashboard/Inbox";
+import Analytics from "../dashboard/Analytics";
 import Team from "../dashboard/Team";
 
 import DemoModal from "../components/DemoModal";
 
 function Dashboard({ type }) {
-    const pages = ["inbox", "create_workspace", "team"];
-    const DEFAULT_PAGE = "inbox";
+    const pages = ["home", "inbox", "create_workspace", "analytics", "team"];
+    const DEFAULT_PAGE = "home";
 
     const [page, setPage] = useState(type || DEFAULT_PAGE);
     const [pageLoaded, setPageLoaded] = useState(false);
@@ -139,15 +141,21 @@ function Dashboard({ type }) {
 
                 {/* Enabled: bg-white shadow-md */}
                 {/* Disabled: border border-transparent hover:bg-white/50 hover:border-gray-400/30 transition */}
+                <div onClick={() => switchPage("home")} className={`size-10 mt-3 cursor-pointer flex justify-center items-center rounded-lg border border-transparent ${page === 'home' ? 'bg-white shadow-md' : 'hover:bg-white/50 hover:border-gray-400/30 transition'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                </div>
+
                 <div onClick={() => switchPage("inbox")} className={`size-10 mt-3 cursor-pointer flex justify-center items-center rounded-lg border border-transparent ${page === 'inbox' ? 'bg-white shadow-md' : 'hover:bg-white/50 hover:border-gray-400/30 transition'}`}>
                     <svg className="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path fillRule="evenodd" d="M6.912 3a3 3 0 0 0-2.868 2.118l-2.411 7.838a3 3 0 0 0-.133.882V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0 0 17.088 3H6.912Zm13.823 9.75-2.213-7.191A1.5 1.5 0 0 0 17.088 4.5H6.912a1.5 1.5 0 0 0-1.434 1.059L3.265 12.75H6.11a3 3 0 0 1 2.684 1.658l.256.513a1.5 1.5 0 0 0 1.342.829h3.218a1.5 1.5 0 0 0 1.342-.83l.256-.512a3 3 0 0 1 2.684-1.658h2.844Z" clipRule="evenodd" />
                     </svg>
                 </div>
 
-                <div onClick={() => alert("Hello there! I see you came from Siege. Well, I'm unfortunately still working on this functionality and it's not quite ready yet (I didn't have enough time to finish by the end of the month).")} className={`size-10 mt-3 cursor-pointer flex justify-center items-center rounded-lg border border-transparent ${page === 'outbound' ? 'bg-white shadow-md' : 'hover:bg-white/50 hover:border-gray-400/30 transition'}`}>
-                    <svg className="size-5.5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z" />
+                <div onClick={() => switchPage("analytics")} className={`size-10 mt-3 cursor-pointer flex justify-center items-center rounded-lg border border-transparent ${page === 'analytics' ? 'bg-white shadow-md' : 'hover:bg-white/50 hover:border-gray-400/30 transition'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                     </svg>
                 </div>
 
@@ -234,7 +242,9 @@ function Dashboard({ type }) {
                     )}
 
                     {user && page === "create_workspace" && <CreateWorkspace onLoad={() => setPageLoaded(true)} />}
+                    {user && user.team && page === "home" && <Home user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                     {user && user.team && page === "inbox" && <Inbox user={user} onLoad={() => setPageLoaded(true)} socket={socket} setToast={setToast} />}
+                    {user && user.team && page === "analytics" && <Analytics user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                     {user && user.team && page === "team" && <Team user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                 </div>
             </div>

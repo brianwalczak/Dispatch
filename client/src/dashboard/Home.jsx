@@ -239,7 +239,14 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
 
                         <div className="flex-1 overflow-y-auto p-4">
                             <div className="space-y-3">
-                                {users.map(member => (
+                                {[...users].sort((a, b) => {
+                                    // keep us on top!
+                                    if (a.id === user.id) return -1;
+                                    if (b.id === user.id) return 1;
+
+                                    // then sort by online status
+                                    return members.includes(b.id) - members.includes(a.id);
+                                }).map(member => (
                                     <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition">
                                         <div className="relative">
                                             <div className="w-10 h-10 bg-black/80 rounded-full flex items-center justify-center text-white font-semibold text-sm">{getInitials(member.name)}</div>

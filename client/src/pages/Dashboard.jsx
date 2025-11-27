@@ -242,7 +242,7 @@ function Dashboard({ type }) {
                     )}
 
                     {user && page === "create_workspace" && <CreateWorkspace onLoad={() => setPageLoaded(true)} />}
-                    {user && user.team && page === "home" && <Home user={user} members={members} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
+                    {user && user.team && page === "home" && <Home user={user} members={members} onLoad={() => setPageLoaded(true)} switchPage={switchPage} setToast={setToast} />}
                     {user && user.team && page === "inbox" && <Inbox user={user} onLoad={() => setPageLoaded(true)} socket={socket} setToast={setToast} />}
                     {user && user.team && page === "analytics" && <Analytics user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
                     {user && user.team && page === "team" && <Team user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}

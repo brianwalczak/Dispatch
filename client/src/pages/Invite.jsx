@@ -73,7 +73,7 @@ function Invite({ id, token: tokenI }) {
                             </svg>
                         </div>
 
-                        <h2 className="text-2xl font-semibold mb-3 text-center">Couldn't accept invite.</h2>
+                        <h2 className="text-2xl font-semibold mb-3 text-center">Couldn&apos;t accept invite.</h2>
                         <p className="text-base text-gray-500 text-center mb-2">{error}</p>
                     </div>
 
@@ -95,7 +95,7 @@ function Invite({ id, token: tokenI }) {
                         </svg>
                     </div>
 
-                    <h2 className="text-2xl font-semibold mb-1 text-center">You're Invited!</h2>
+                    <h2 className="text-2xl font-semibold mb-1 text-center">You&apos;re Invited!</h2>
                     <p className="text-base text-gray-500 text-center">You were invited to join a workspace on Dispatch.</p>
                 </div>
 
@@ -153,7 +153,7 @@ function Invite({ id, token: tokenI }) {
                 {/* adding this just in case */}
                 {!token && (invite?.isUser ? (
                     <p className="text-center text-gray-500 text-sm mt-4">
-                        Don't have an account? <button onClick={() => handleRedirect('sign_up')} className="text-gray-900 font-medium hover:underline cursor-pointer">Sign up</button>
+                        Don&apos;t have an account? <button onClick={() => handleRedirect('sign_up')} className="text-gray-900 font-medium hover:underline cursor-pointer">Sign up</button>
                     </p>
                 ) : (
                     <p className="text-center text-gray-500 text-sm mt-4">

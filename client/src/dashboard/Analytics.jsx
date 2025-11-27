@@ -1,4 +1,4 @@
-function Analytics({ user, onLoad, setToast }) {
+function Analytics() {
     return (
         <></>
     );

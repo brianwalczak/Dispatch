@@ -66,7 +66,7 @@ function InviteModal({ user, token, setToast, onClose }) {
                     </button>
                 </div>
 
-                <p className="text-sm text-gray-500 mb-5">Enter the email address of the user you'd like to invite to your workspace.</p>
+                <p className="text-sm text-gray-500 mb-5">Enter the email address of the user you&apos;d like to invite to your workspace.</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-6">

@@ -111,7 +111,7 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
                 <div className="flex items-center justify-between p-6 bg-white border border-gray-300 rounded-2xl">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome back, {user.name.split(" ")[0]}! 👋</h1>
-                        <p className="text-gray-500">Here's your {user.team.name} overview for today.</p>
+                        <p className="text-gray-500">Here&apos;s your {user.team.name} overview for today.</p>
                     </div>
 
                     <div>
@@ -205,7 +205,7 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
                             ) : (
                                 <div className="space-y-3">
                                     {sessions.map(session => (
-                                        <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200">
+                                        <div key={session.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-8 text-gray-400">

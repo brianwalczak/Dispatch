@@ -1,11 +1,13 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
 import { useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 
 function GetStarted() {
     const [status, setStatus] = useState(null);
     const [name, setName] = useState("");
     const [step, setStep] = useState(1);
+    const [params] = useSearchParams();
 
     const [form, setForm] = useState(null);
     const [createStep, setCreateStep] = useState(null);

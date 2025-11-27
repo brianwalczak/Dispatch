@@ -1,11 +1,13 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
 import { useEffect, useState } from "react";
+import { useSearchParams } from 'react-router-dom';
 
 function Auth_Reset() {
     const [status, setStatus] = useState(null);
     const [success, setSuccess] = useState(false);
     const [step, setStep] = useState(1);
+    const [params] = useSearchParams();
 
     const handleSubmit = function (e) {
         e.preventDefault();
@@ -44,7 +46,6 @@ function Auth_Reset() {
     };
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
 
         if (token?.trim()) return setStep(2);

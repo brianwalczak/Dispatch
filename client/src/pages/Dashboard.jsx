@@ -4,13 +4,24 @@ import Toast from '../components/Toast.jsx';
 import { getInitials } from "../providers/utils.jsx";
 import DashboardPage from "../components/DashboardPage";
 import DemoModal from "../components/DemoModal";
+import InviteModal from "../components/InviteModal";
+import InvitePendingModal from "../components/InvitePendingModal";
 
 function Dashboard() {
-    const { page, switchPage, user, socket, members, toast } = useDashboard();
+    const { page, switchPage, user, socket, members, toast, showInvite, showPending, setShowInvite, setShowPending } = useDashboard();
 
     return (
         <div className="bg-[#eff1ea] flex h-screen">
             {toast && <Toast {...toast} />}
+
+            {showInvite && (
+                <InviteModal onClose={() => setShowInvite(false)} />
+            )}
+
+            {showPending && (
+                <InvitePendingModal onClose={() => setShowPending(false)} />
+            )}
+
             <DemoModal />
 
             <div className="w-[52px] h-full bg-transparent flex flex-col items-center">

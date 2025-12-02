@@ -12,9 +12,9 @@ function CreateWorkspace({ onLoad }) {
     useEffect(() => {
         setLoading(false);
         if (onLoad) onLoad();
-    }, []);
+    }, [onLoad]);
 
-    const handleSubmit = useCallback(async function (e) {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
 
         let name = $('#name').val();

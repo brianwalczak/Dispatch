@@ -20,7 +20,7 @@ function InviteModal({ onClose }) {
     const handleClose = useCallback(() => {
         setVisible(false);
         if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
-    }, []);
+    }, [onClose]);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
@@ -40,6 +40,7 @@ function InviteModal({ onClose }) {
             success: function (response) {
                 if (response.success) {
                     setToast({ id: "success-toast", type: "success", message: `An invite to join ${user.team.name} has been sent successfully.`, onClose: () => setToast(null) });
+                    setLoading(false);
                     handleClose();
                 }
             },

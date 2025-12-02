@@ -17,8 +17,13 @@ function InvitePendingModal({ onClose }) {
         return () => cancelAnimationFrame(id);
     }, []); // on mount
 
-    useEffect(() => {
-        if (!user || !token) return;
+    const handleClose = useCallback(() => {
+        setVisible(false);
+        if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
+    }, [onClose]);
+
+    const fetchInvites = useCallback(() => {
+        if (!token || !user) return;
 
         $.ajax({
             url: (api_url + "/api/invites"),
@@ -39,14 +44,11 @@ function InvitePendingModal({ onClose }) {
                 }
             }
         });
-    }, []);
-
-    const handleClose = useCallback(() => {
-        setVisible(false);
-        if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
-    }, []);
+    }, [token, user, setToast]);
 
     const deleteInvite = useCallback((id) => {
+        if (!token) return;
+        
         $.ajax({
             url: (api_url + `/api/invites/${id}`),
             method: "DELETE",
@@ -65,6 +67,11 @@ function InvitePendingModal({ onClose }) {
             }
         });
     }, [invites, token, setToast]);
+
+    useEffect(() => {
+        if (!token || !user) return;
+        fetchInvites();
+    }, [token, user]); // don't need to include fetchInvites since it already redefines on token/user change
 
     return (
         <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

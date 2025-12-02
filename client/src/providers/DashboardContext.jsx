@@ -16,12 +16,16 @@ export const DashboardProvider = () => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [token] = useState(localStorage.getItem("token"));
-    const [toast, setToast] = useState(null);
     const [socket, setSocket] = useState(null);
     const [members, setMembers] = useState([]); // array of connected agents
 
+    // modals / toasts
+    const [showInvite, setShowInvite] = useState(false);
+    const [showPending, setShowPending] = useState(false);
+    const [toast, setToast] = useState(null);
+
     // Fetch data for the user using the token (use ajax)
-    const fetchUser = useCallback(async () => {
+    const fetchUser = useCallback(() => {
         if (!token) return;
 
         $.ajax({
@@ -72,7 +76,7 @@ export const DashboardProvider = () => {
         if (!pages.includes(page)) return setPage(DEFAULT_PAGE);
 
         window.history.pushState({}, "", `/${page}`);
-        fetchUser();
+        fetchUser(); // fetch user data again (in-case something changed)
     }, [page]); // when user changes page, fetch new data (also on mount)
 
     // Establish socket connection when user is available
@@ -99,7 +103,7 @@ export const DashboardProvider = () => {
     }, [token]);
 
     return (
-        <DashboardContext.Provider value={{ user, setUser, token, page, switchPage, loading, setLoading, toast, setToast, socket, members }}>
+        <DashboardContext.Provider value={{ page, switchPage, loading, setLoading, user, setUser, token, socket, members, showInvite, setShowInvite, showPending, setShowPending, toast, setToast }}>
             <Dashboard />
         </DashboardContext.Provider>
     );

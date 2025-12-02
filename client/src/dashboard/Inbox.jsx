@@ -14,71 +14,8 @@ function Inbox({ onLoad }) {
     const [selected, setSelected] = useState(null); // session ID
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const fetchMessages = useCallback(() => {
-        if (!selected || !socket) return;
-
-        $.ajax({
-            url: (api_url + `/api/session/${selected}`),
-            method: 'POST',
-            data: { type: "agent", token: token },
-            success: function (response) {
-                if (response.success && response.data && response.data.messages) {
-                    setMessages(response.data.messages);
-                    setIsInitialLoad(true);
-                }
-            },
-            error: function (xhr) {
-                if (xhr.status === 401) {
-                    localStorage.removeItem("token");
-                    window.location.href = "/auth/sign_in";
-                } else {
-                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
-                }
-            },
-        });
-    }, [selected, socket, token, setToast]);
-
-    const sendMessage = useCallback((close = false) => {
-        if (!selected || !socket) return;
-
-        const message = $("#message").val();
-        if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
-
-        $.ajax({
-            url: (api_url + `/api/session/${selected}/create`),
-            method: 'POST',
-            data: { type: "agent", token: token, message: message },
-            success: function (response) {
-                if (response.success && response.data) {
-                    setMessages(prevMessages => {
-                        if (!prevMessages.find(m => m.id === response.data.id)) {
-                            return [...prevMessages, response.data];
-                        }
-
-                        return prevMessages;
-                    });
-
-                    setIsInitialLoad(false); // New message, not initial load
-                }
-
-                $("#message").val("");
-                $("#message").css("height", "auto");
-            },
-            error: function (xhr) {
-                if (xhr.status === 401) {
-                    localStorage.removeItem("token");
-                    window.location.href = "/auth/sign_in";
-                } else {
-                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
-                }
-            },
-        });
-
-        if (close) return setConversation("closed");
-    }, [selected, socket, token, setToast]);
-
     const setConversation = useCallback((status) => {
-        if (!selected || !socket) return;
+        if (!selected || !token) return;
 
         $.ajax({
             url: (api_url + `/api/session/${selected}`),
@@ -127,9 +64,9 @@ function Inbox({ onLoad }) {
                 }
             },
         });
-    }, [selected, socket, token, filter, sessions, setToast]);
+    }, [selected, token, sessions, filter, setToast]);
 
-    const fetchSessions = useCallback(async () => {
+    const fetchSessions = useCallback(() => {
         if (!token || !user) return;
 
         $.ajax({
@@ -153,6 +90,69 @@ function Inbox({ onLoad }) {
         });
     }, [token, user, setToast]);
 
+    const fetchMessages = useCallback(() => {
+        if (!selected || !token) return;
+
+        $.ajax({
+            url: (api_url + `/api/session/${selected}`),
+            method: 'POST',
+            data: { type: "agent", token: token },
+            success: function (response) {
+                if (response.success && response.data && response.data.messages) {
+                    setMessages(response.data.messages);
+                    setIsInitialLoad(true);
+                }
+            },
+            error: function (xhr) {
+                if (xhr.status === 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/auth/sign_in";
+                } else {
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
+                }
+            },
+        });
+    }, [selected, token, setToast]);
+
+    const sendMessage = useCallback((close = false) => {
+        if (!selected || !token) return;
+
+        const message = $("#message").val();
+        if (!message || message.length === 0 || message.length > 500) return setToast({ id: "err-toast", type: "error", message: "Your message must be between 1 and 500 characters.", onClose: () => setToast(null) });
+
+        $.ajax({
+            url: (api_url + `/api/session/${selected}/create`),
+            method: 'POST',
+            data: { type: "agent", token: token, message: message },
+            success: function (response) {
+                if (response.success && response.data) {
+                    setMessages(prevMessages => {
+                        if (!prevMessages.find(m => m.id === response.data.id)) {
+                            return [...prevMessages, response.data];
+                        }
+
+                        return prevMessages;
+                    });
+
+                    setIsInitialLoad(false); // New message, not initial load
+                }
+
+                $("#message").val("");
+                $("#message").css("height", "auto");
+            },
+            error: function (xhr) {
+                if (xhr.status === 401) {
+                    localStorage.removeItem("token");
+                    window.location.href = "/auth/sign_in";
+                } else {
+                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
+                }
+            },
+        });
+
+        if (close) return setConversation("closed");
+    }, [selected, token, setToast, setConversation]);
+
     useEffect(() => {
         if (!token || !user) return;
 
@@ -160,7 +160,7 @@ function Inbox({ onLoad }) {
 
         setLoading(false);
         if (onLoad) onLoad();
-    }, [token, user, fetchSessions]);
+    }, [token, user]); // don't need to include fetchSessions since it already redefines on token/user change
 
     useEffect(() => {
         if (!socket) return;
@@ -290,8 +290,10 @@ function Inbox({ onLoad }) {
         };
     }, [socket]);
 
+    // handle the scrolling to the latest message!
     useEffect(() => {
         if (!messages) return;
+        
         const end_container = $("#chat-end")[0]?.parentElement;
         const end = $("#chat-end")[0];
 
@@ -303,10 +305,14 @@ function Inbox({ onLoad }) {
             // For new messages, use smooth scrolling cuz it's nicer
             end.scrollIntoView({ behavior: "smooth" });
         }
+    }, [messages, isInitialLoad]);
 
-        // update latest message in sessions list
+    // update latest message in sessions list
+    useEffect(() => {
+        if (!messages || !selected) return;
+
         setSessions(prevSessions => prevSessions.map(session => session.id === selected ? { ...session, latestMessage: messages[messages.length - 1] || null } : session));
-    }, [messages]);
+    }, [messages, selected]);
 
     useEffect(() => {
         if (selected && socket) {

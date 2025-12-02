@@ -14,13 +14,30 @@ function InvitePendingModal({ onClose }) {
     // used to trigger fade in animation
     useEffect(() => {
         const id = requestAnimationFrame(() => setVisible(true));
-        return () => cancelAnimationFrame(id);
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            cancelAnimationFrame(id);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
     }, []); // on mount
 
     const handleClose = useCallback(() => {
         setVisible(false);
         if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
     }, [onClose]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Escape") {
+            handleClose();
+        }
+    };
+
+    const handleClickAway = (e) => {
+        if (e.target === e.currentTarget) { // only if it's the bg
+            handleClose();
+        }
+    };
 
     const fetchInvites = useCallback(() => {
         if (!token || !user) return;
@@ -74,7 +91,7 @@ function InvitePendingModal({ onClose }) {
     }, [token, user]); // don't need to include fetchInvites since it already redefines on token/user change
 
     return (
-        <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={handleClickAway}>
             <div className={`bg-white/70 rounded-2xl shadow-lg max-w-md w-full mx-4 p-6 border border-gray-400/30 transition-all duration-${FADE_DURATION} ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                 <div className="flex items-center justify-between mb-1">
                     <h2 className="text-xl font-semibold">Pending Invites</h2>

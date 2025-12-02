@@ -73,7 +73,6 @@ function Team({ onLoad }) {
     useEffect(() => {
         if (!token || !user) return;
 
-        fetchSessions();
         fetchTeam();
 
         setLoading(false);

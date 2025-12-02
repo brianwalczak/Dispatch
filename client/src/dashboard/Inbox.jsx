@@ -313,7 +313,7 @@ function Inbox({ onLoad }) {
             setIsInitialLoad(true); // reset da flag when switching conversations
             fetchMessages();
         }
-    }, [selected, socket. fetchMessages]);
+    }, [selected, socket, fetchMessages]);
 
     if (loading) return null;
     return (

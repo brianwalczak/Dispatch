@@ -10,6 +10,7 @@ function Dashboard() {
 
     return (
         <div className="bg-[#eff1ea] flex h-screen">
+            {toast && <Toast {...toast} />}
             <DemoModal />
 
             <div className="w-[52px] h-full bg-transparent flex flex-col items-center">

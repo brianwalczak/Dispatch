@@ -1,26 +1,20 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import InviteModal from "../components/InviteModal";
 import InvitePendingModal from "../components/InvitePendingModal";
+import { useDashboard } from "../providers/DashboardContext";
+import { getInitials } from "../providers/utils.jsx";
 
-function Team({ user, onLoad, setToast }) {
+function Team({ onLoad }) {
+    const { user, setToast } = useDashboard();
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
     const [token] = useState(localStorage.getItem("token"));
     const [showInvite, setShowInvite] = useState(false);
     const [showPending, setShowPending] = useState(false);
 
-    function getInitials(name) {
-        return name
-            .split(" ")           // split into words
-            .slice(0, 2)          // take up to the first 2 words for profile pictures
-            .map(word => word[0]) // take first letter of each
-            .join("")             // join letters together
-            .toUpperCase();
-    }
-
-    const deleteUser = (userId) => {
+    const deleteUser = useCallback((userId) => {
         if (!userId) return;
         if (!confirm("Are you sure you want to remove this team member? This action cannot be undone.")) return;
 
@@ -43,9 +37,11 @@ function Team({ user, onLoad, setToast }) {
                 }
             },
         });
-    };
+    }, [token, user, setToast]);
 
-    useEffect(() => {
+    const fetchTeam = useCallback(async () => {
+        if (!token || !user) return;
+
         $.ajax({
             url: (api_url + `/api/workspaces/${user.team.id}`),
             method: 'POST',
@@ -72,27 +68,27 @@ function Team({ user, onLoad, setToast }) {
                 }
             },
         });
+    }, [token, user, setToast]);
+
+    useEffect(() => {
+        if (!token || !user) return;
+
+        fetchSessions();
+        fetchTeam();
 
         setLoading(false);
         if (onLoad) onLoad();
-    }, []);
-
-    useEffect(() => {
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-    }, [token]);
+    }, [token, user]);
 
     if (loading) return null;
-
     return (
         <>
             {showInvite && (
-                <InviteModal user={user} token={token} onClose={() => setShowInvite(false)} setToast={setToast} />
+                <InviteModal onClose={() => setShowInvite(false)} />
             )}
 
             {showPending && (
-                <InvitePendingModal user={user} token={token} onClose={() => setShowPending(false)} setToast={setToast} />
+                <InvitePendingModal onClose={() => setShowPending(false)} />
             )}
 
             <div className="flex flex-col w-full h-full justify-start bg-white border border-gray-300 rounded-2xl py-4">

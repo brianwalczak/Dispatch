@@ -1,112 +1,15 @@
-import { api_url, socket_url } from "../providers/config";
-// ------------------------------------------------------- //
-import { useState, useEffect } from "react";
 import { Dropdown, closeMenu } from "../components/Dropdown";
-import { io } from "socket.io-client";
+import { useDashboard } from "../providers/DashboardContext.jsx";
 import Toast from '../components/Toast.jsx';
-
-import CreateWorkspace from "../dashboard/CreateWorkspace";
-import Home from "../dashboard/Home";
-import Inbox from "../dashboard/Inbox";
-import Analytics from "../dashboard/Analytics";
-import Team from "../dashboard/Team";
-
+import { getInitials } from "../providers/utils.jsx";
+import DashboardPage from "../components/DashboardPage";
 import DemoModal from "../components/DemoModal";
 
-function Dashboard({ type }) {
-    const pages = ["home", "inbox", "create_workspace", "analytics", "team"];
-    const DEFAULT_PAGE = "home";
-
-    const [page, setPage] = useState(type || DEFAULT_PAGE);
-    const [pageLoaded, setPageLoaded] = useState(false);
-    const [user, setUser] = useState(null);
-    const [token] = useState(localStorage.getItem("token"));
-    const [toast, setToast] = useState(null);
-    const [socket, setSocket] = useState(null);
-    const [members, setMembers] = useState([]); // array of connected agents
-
-    function getInitials(name) {
-        return name
-            .split(" ")           // split into words
-            .slice(0, 3)          // take up to the first 3 words
-            .map(word => word[0]) // take first letter of each
-            .join("");            // join letters together
-    }
-
-    const switchPage = (newPage) => {
-        if (newPage === page) return;
-
-        setPageLoaded(false);
-        return setPage(newPage);
-    };
-
-    useEffect(() => {
-        if (!pages.includes(page)) return setPage(DEFAULT_PAGE);
-
-        // Update the page location
-        window.history.pushState({}, "", `/${page}`);
-
-        // Fetch data for the user using the token (use ajax)
-        $.ajax({
-            url: (api_url + "/api/user/me"),
-            method: "POST",
-            data: { token: token, workspace: (localStorage.getItem("workspace") || null) },
-            success: function (response) {
-                if (response.success && response.data) {
-                    let workspace = localStorage.getItem("workspace");
-
-                    if ((!workspace || !response.data.teams.some(t => t.id === workspace)) && response.data.lastOpenedId) {
-                        workspace = response.data.lastOpenedId;
-                        localStorage.setItem("workspace", response.data.lastOpenedId);
-                    }
-
-                    response.data.team = response.data.teams.find(t => t.id === workspace) || null;
-                    if (!response.data.team) {
-                        if (localStorage.getItem("workspace") !== null) {
-                            localStorage.removeItem("workspace"); // might be stale
-                            return window.location.reload();
-                        } else if (page !== "create_workspace") {
-                            return switchPage("create_workspace");
-                        }
-                    }
-                    setUser(response.data);
-                }
-            },
-            error: function (xhr) {
-                if (xhr.status === 401) {
-                    localStorage.removeItem("token");
-                    window.location.href = "/auth/sign_in";
-                } else {
-                    setToast({ id: "err-toast", type: "error", message: "An internal error occurred. Please try again later.", onClose: () => setToast(null) });
-                }
-            }
-        });
-    }, [page]); // when user changes page, fetch new data (also on mount)
-
-    useEffect(() => {
-        if (user && user.team && !socket) {
-            const newSocket = io(socket_url, { auth: { type: "agent", token: token, teamId: user.team.id } });
-            setSocket(newSocket);
-
-            newSocket.on("members", (members) => {
-                setMembers(members);
-            });
-
-            return () => {
-                newSocket.disconnect();
-            };
-        }
-    }, [user, token]);
-
-    useEffect(() => {
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-    }, [token]);
+function Dashboard() {
+    const { page, switchPage, user, socket, members, toast } = useDashboard();
 
     return (
         <div className="bg-[#eff1ea] flex h-screen">
-            {toast && <Toast {...toast} />}
             <DemoModal />
 
             <div className="w-[52px] h-full bg-transparent flex flex-col items-center">
@@ -231,22 +134,7 @@ function Dashboard({ type }) {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden">
-                    {!pageLoaded && (
-                        <div className="bg-white border border-gray-300 rounded-2xl h-full">
-                            <div className="flex flex-col items-center text-gray-500 justify-center h-full">
-                                <div className="w-16 h-16 border-6 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-3"></div>
-                                <p className="text-xl font-medium">{!user ? "Loading, this won't take long..." : `Welcome back, ${user.name.split(" ")[0]}!`}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {user && page === "create_workspace" && <CreateWorkspace onLoad={() => setPageLoaded(true)} />}
-                    {user && user.team && page === "home" && <Home user={user} members={members} onLoad={() => setPageLoaded(true)} switchPage={switchPage} setToast={setToast} />}
-                    {user && user.team && page === "inbox" && <Inbox user={user} onLoad={() => setPageLoaded(true)} socket={socket} setToast={setToast} />}
-                    {user && user.team && page === "analytics" && <Analytics user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
-                    {user && user.team && page === "team" && <Team user={user} onLoad={() => setPageLoaded(true)} setToast={setToast} />}
-                </div>
+                <DashboardPage page={page} /> {/* load the page */}
             </div>
         </div>
     );

@@ -1,9 +1,9 @@
 import { useParams, useSearchParams, Routes, Route, Navigate } from "react-router-dom";
+import { DashboardProvider } from "./providers/DashboardContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Auth from "./pages/Auth";
 import GetStarted from "./pages/GetStarted";
 import Auth_Reset from "./pages/Auth_Reset";
-import Dashboard from "./pages/Dashboard";
 import Invite from "./pages/Invite";
 import "./index.css";
 
@@ -17,11 +17,6 @@ function RequireNoAuth({ children }) {
     const token = localStorage.getItem("token");
 
     return token ? <Navigate to="/" replace /> : children;
-}
-
-function LoadDashboard() {
-    const { page } = useParams();
-    return <Dashboard type={page || null} />;
 }
 
 function LoadInvite() {
@@ -48,8 +43,8 @@ export default function App() {
                 <Route path="/auth/sign_up" element={<RequireNoAuth><GetStarted /></RequireNoAuth>} />
                 <Route path="/auth/reset_password" element={<RequireNoAuth><Auth_Reset /></RequireNoAuth>} />
                 <Route path="/invites/:id" element={<LoadInvite />} />
-                <Route path="/" element={<RequireAuth><LoadDashboard /></RequireAuth>} />
-                <Route path="/:page" element={<RequireAuth><LoadDashboard /></RequireAuth>} />
+                <Route path="/" element={<RequireAuth><DashboardProvider /></RequireAuth>} />
+                <Route path="/:page" element={<RequireAuth><DashboardProvider /></RequireAuth>} />
                 <Route path="/test" element={<TestChat />} />
             </Routes>
         </>

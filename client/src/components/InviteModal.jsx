@@ -1,10 +1,12 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useEffect, useState } from 'react';
+import { useDashboard } from "../providers/DashboardContext";
+import { useEffect, useState, useCallback } from 'react';
 
 const FADE_DURATION = 150; // ms
 
-function InviteModal({ user, token, setToast, onClose }) {
+function InviteModal({ onClose }) {
+    const { user, token, setToast } = useDashboard();
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
@@ -15,12 +17,12 @@ function InviteModal({ user, token, setToast, onClose }) {
         return () => cancelAnimationFrame(id);
     }, []); // on mount
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setVisible(false);
         if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
-    };
+    }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = useCallback((e) => {
         e.preventDefault();
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -52,7 +54,7 @@ function InviteModal({ user, token, setToast, onClose }) {
                 }
             }
         });
-    };
+    }, [email, token, user, setToast, handleClose]);
 
     return (
         <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

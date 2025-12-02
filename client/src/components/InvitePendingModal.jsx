@@ -1,10 +1,12 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useEffect, useState } from 'react';
+import { useDashboard } from "../providers/DashboardContext";
+import { useEffect, useState, useCallback } from 'react';
 
 const FADE_DURATION = 150; // ms
 
-function InvitePendingModal({ user, token, setToast, onClose }) {
+function InvitePendingModal({ onClose }) {
+    const { user, token, setToast } = useDashboard();
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(true);
     const [invites, setInvites] = useState([]);
@@ -16,8 +18,8 @@ function InvitePendingModal({ user, token, setToast, onClose }) {
     }, []); // on mount
 
     useEffect(() => {
-        if(!user || !token) return;
-        
+        if (!user || !token) return;
+
         $.ajax({
             url: (api_url + "/api/invites"),
             method: "POST",
@@ -39,12 +41,12 @@ function InvitePendingModal({ user, token, setToast, onClose }) {
         });
     }, []);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setVisible(false);
         if (onClose) setTimeout(onClose, FADE_DURATION); // wait for animation before closing
-    };
+    }, []);
 
-    const deleteInvite = (id) => {
+    const deleteInvite = useCallback((id) => {
         $.ajax({
             url: (api_url + `/api/invites/${id}`),
             method: "DELETE",
@@ -62,7 +64,7 @@ function InvitePendingModal({ user, token, setToast, onClose }) {
                 }
             }
         });
-    };
+    }, [invites, token, setToast]);
 
     return (
         <div className={`fixed inset-0 bg-[#eff1ea]/80 backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-${FADE_DURATION} ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -94,7 +96,7 @@ function InvitePendingModal({ user, token, setToast, onClose }) {
                                     <p className="text-sm font-medium text-gray-900 truncate">{invite.email}</p>
                                     <p className="text-xs text-gray-500 truncate">Expires on {new Date(invite.expiresAt).toLocaleDateString()}</p>
                                 </div>
-                                
+
                                 <button onClick={() => deleteInvite(invite.id)} className="cursor-pointer ml-3 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

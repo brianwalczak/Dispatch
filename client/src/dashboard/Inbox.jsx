@@ -1,19 +1,20 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dropdown, closeMenu } from "../components/Dropdown";
+import { useDashboard } from "../providers/DashboardContext";
 
-function Inbox({ user, onLoad, socket, setToast }) {
+function Inbox({ onLoad }) {
+    const { user, token, socket, setToast } = useDashboard();
     const [loading, setLoading] = useState(true);
     const [sessions, setSessions] = useState([]);
     const [messages, setMessages] = useState([]);
 
     const [filter, setFilter] = useState("open"); // "open" or "closed"
     const [selected, setSelected] = useState(null); // session ID
-    const [token] = useState(localStorage.getItem("token"));
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const getMessages = () => {
+    const fetchMessages = useCallback(() => {
         if (!selected || !socket) return;
 
         $.ajax({
@@ -35,9 +36,9 @@ function Inbox({ user, onLoad, socket, setToast }) {
                 }
             },
         });
-    };
+    }, [selected, socket, token, setToast]);
 
-    const sendMessage = (close = false) => {
+    const sendMessage = useCallback((close = false) => {
         if (!selected || !socket) return;
 
         const message = $("#message").val();
@@ -74,9 +75,9 @@ function Inbox({ user, onLoad, socket, setToast }) {
         });
 
         if (close) return setConversation("closed");
-    };
+    }, [selected, socket, token, setToast]);
 
-    const setConversation = (status) => {
+    const setConversation = useCallback((status) => {
         if (!selected || !socket) return;
 
         $.ajax({
@@ -126,9 +127,11 @@ function Inbox({ user, onLoad, socket, setToast }) {
                 }
             },
         });
-    };
+    }, [selected, socket, token, filter, sessions, setToast]);
 
-    useEffect(() => {
+    const fetchSessions = useCallback(async () => {
+        if (!token || !user) return;
+
         $.ajax({
             url: (api_url + `/api/sessions/${user.team.id}`),
             method: 'POST',
@@ -148,16 +151,16 @@ function Inbox({ user, onLoad, socket, setToast }) {
                 }
             },
         });
+    }, [token, user, setToast]);
+
+    useEffect(() => {
+        if (!token || !user) return;
+
+        fetchSessions();
 
         setLoading(false);
         if (onLoad) onLoad();
-    }, []);
-
-    useEffect(() => {
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-    }, [token]);
+    }, [token, user, fetchSessions]);
 
     useEffect(() => {
         if (!socket) return;
@@ -308,9 +311,9 @@ function Inbox({ user, onLoad, socket, setToast }) {
     useEffect(() => {
         if (selected && socket) {
             setIsInitialLoad(true); // reset da flag when switching conversations
-            getMessages();
+            fetchMessages();
         }
-    }, [selected, socket]);
+    }, [selected, socket. fetchMessages]);
 
     if (loading) return null;
     return (

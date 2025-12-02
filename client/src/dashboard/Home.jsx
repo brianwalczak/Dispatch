@@ -1,27 +1,21 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import InviteModal from "../components/InviteModal";
+import { useDashboard } from "../providers/DashboardContext";
+import { getInitials } from "../providers/utils.jsx";
 
-function Home({ user, members, onLoad, switchPage, setToast }) {
+function Home({ onLoad }) {
+    const { user, token, members, switchPage, setToast } = useDashboard();
     const [loading, setLoading] = useState(true);
-    const [token] = useState(localStorage.getItem("token"));
     const [stats, setStats] = useState({ open: 0, closed: 0 });
     const [showInvite, setShowInvite] = useState(false);
     const [sessions, setSessions] = useState([]);
     const [users, setUsers] = useState([]);
 
-    function getInitials(name) {
-        return name
-            .split(" ")           // split into words
-            .slice(0, 2)          // take up to the first 2 words for profile pictures
-            .map(word => word[0]) // take first letter of each
-            .join("")             // join letters together
-            .toUpperCase();
-    }
+    const fetchSessions = useCallback(async () => {
+        if (!token || !user) return;
 
-    useEffect(() => {
-        // Fetch sessions data
         $.ajax({
             url: (api_url + `/api/sessions/${user.team.id}`),
             method: 'POST',
@@ -60,8 +54,11 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
                 }
             },
         });
+    }, [token, user, setToast]);
 
-        // Fetch team members data
+    const fetchTeam = useCallback(async () => {
+        if (!token || !user) return;
+
         $.ajax({
             url: (api_url + `/api/workspaces/${user.team.id}`),
             method: 'POST',
@@ -88,23 +85,23 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
                 }
             },
         });
+    }, [token, user, setToast]);
+
+    useEffect(() => {
+        if (!token || !user) return;
+
+        fetchSessions();
+        fetchTeam();
 
         setLoading(false);
         if (onLoad) onLoad();
-    }, []);
-
-    useEffect(() => {
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-    }, [token]);
+    }, [token, user]);
 
     if (loading) return null;
-
     return (
         <>
             {showInvite && (
-                <InviteModal user={user} token={token} onClose={() => setShowInvite(false)} setToast={setToast} />
+                <InviteModal onClose={() => setShowInvite(false)} />
             )}
 
             <div className="flex flex-col w-full h-full justify-start gap-2">
@@ -258,7 +255,7 @@ function Home({ user, members, onLoad, switchPage, setToast }) {
                                                 {member.name}
                                                 {member.id === user.id && <span className="text-xs text-gray-400 ml-1">(You)</span>}
                                             </p>
-                                            
+
                                             <p className="text-xs text-gray-500 truncate">{member.email}</p>
                                         </div>
                                     </div>

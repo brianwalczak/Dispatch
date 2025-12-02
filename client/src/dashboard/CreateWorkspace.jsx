@@ -1,25 +1,20 @@
 import { api_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { useState, useEffect } from "react";
+import { useDashboard } from "../providers/DashboardContext";
+import { useState, useEffect, useCallback } from "react";
 
 function CreateWorkspace({ onLoad }) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState("");
-    const [token] = useState(localStorage.getItem("token"));
+    const { token } = useDashboard();
 
     useEffect(() => {
         setLoading(false);
         if (onLoad) onLoad();
     }, []);
 
-    useEffect(() => {
-        if (!token) {
-            window.location.href = "/auth/sign_in";
-        }
-    }, [token]);
-
-    const handleSubmit = async function (e) {
+    const handleSubmit = useCallback(async function (e) {
         e.preventDefault();
 
         let name = $('#name').val();
@@ -58,7 +53,7 @@ function CreateWorkspace({ onLoad }) {
         } else {
             setStatus(response.reason.responseJSON?.error || response.reason.statusText);
         }
-    };
+    }, [token]);
 
     if (loading) return null;
     return (

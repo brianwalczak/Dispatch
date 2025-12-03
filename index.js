@@ -489,7 +489,7 @@ app.post('/api/invites/new', async (req, res) => {
         teamId: teamId
       }
     });
-    
+
     res.json({ success: true, id: invite.id });
 
     try {
@@ -543,11 +543,15 @@ app.post('/api/invites/:id', async (req, res) => {
       where: { email: invite.email }
     });
 
-    res.json({ success: true, data: { email: invite.email, isUser: !!user, expiresAt: invite.expiresAt, team: {
-      // only include necessary info to prevent extra data leak, that'd suck lol
-      name: invite.team.name,
-      description: invite.team.description
-    }}});
+    res.json({
+      success: true, data: {
+        email: invite.email, isUser: !!user, expiresAt: invite.expiresAt, team: {
+          // only include necessary info to prevent extra data leak, that'd suck lol
+          name: invite.team.name,
+          description: invite.team.description
+        }
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }
@@ -703,6 +707,142 @@ app.post('/api/sessions/create', async (req, res) => {
       ...safeSession,
       latestMessage: messages[0] || null
     });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+// -- Analytics Routes -- //
+app.post('/api/analytics/:team', async (req, res) => {
+  const { token, range } = req.body;
+
+  if (!token || !req.params?.team) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Check if the user is part of the team
+    const workspace = await prisma.team.findFirst({
+      where: {
+        id: req.params.team,
+        users: {
+          some: { id: valid.userId }
+        }
+      }
+    });
+
+    if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
+
+    const days = range === '24h' ? 1 : range === '30d' ? 30 : 7; // default to 7 days
+    const now = DateTime.utc();
+
+    let startDate = now.minus({ days });
+    let compDate = now.minus({ days: (days * 2) });
+
+    // Fetch sessions for current period
+    const sessions = await prisma.session.findMany({
+      where: {
+        teamId: req.params.team,
+        createdAt: { gte: startDate.toJSDate() } // greater than or equal to
+      }
+    });
+
+    // Fetch sessions for the previous period (comparison)
+    const prevSessions = await prisma.session.findMany({
+      where: {
+        teamId: req.params.team,
+        createdAt: {
+          gte: compDate.toJSDate(), // greater than or equal to the comparison start date
+          lt: startDate.toJSDate() // less than the current period start date
+        }
+      }
+    });
+
+    // Calculate current period sessions
+    const totals = {
+      total: sessions.length,
+      open: sessions.filter(s => s.status === 'open').length,
+      closed: sessions.filter(s => s.status === 'closed').length
+    };
+
+    // Calculate comparison sessions (as a percentage!)
+    const comparison = prevSessions.length > 0 // if there's any activity in the previous period
+      ? Math.round(((totals.total - prevSessions.length) / prevSessions.length) * 100) // calculate the percentage increase/decrease in activity
+      : (totals.total > 0 ? 100 : 0); // otherwise 100% increase if there's any current activity, 0% if no activity has been made whatsoever
+
+    // Calculate the average resolution time in minutes
+    const closedSessions = sessions.filter(s => s.status === 'closed' && s.closedAt);
+    let avgResolutionTime = 0; // 0 if no closed sessions
+
+    if (closedSessions.length > 0) {
+      let totalMinutes = 0;
+
+      for (const s of closedSessions) {
+        const created = DateTime.fromJSDate(s.createdAt);
+        const closed = DateTime.fromJSDate(s.closedAt);
+
+        totalMinutes += closed.diff(created, 'minutes').minutes;
+      }
+
+      avgResolutionTime = totalMinutes / closedSessions.length;
+    }
+
+    // Construct timeline data across each day in the range
+    let timeline = new Map();
+    const timelineDays = range === '24h' ? 2 : days; // for 24h range we need to include both today and yesterday
+
+    // create empty entries for each day
+    for (let i = timelineDays - 1; i >= 0; i--) {
+      const date = now.minus({ days: i });
+      const key = date.toFormat('MMM d');
+
+      timeline.set(key, { date: key, total: 0, closed: 0 });
+    }
+
+    // pop entries with da actual session data
+    sessions.forEach(session => {
+      const date = DateTime.fromJSDate(session.createdAt).toFormat('MMM d');
+
+      if (timeline.has(date)) {
+        const entry = timeline.get(date);
+        entry.total += 1;
+
+        if (session.status === 'closed') {
+          entry.closed += 1;
+        }
+      }
+    });
+
+    timeline = Array.from(timeline.values()); // convert back to array
+
+    // Construct hourly distribution data for each hour in the day
+    let hourly = new Map();
+
+    // create empty entries for each hour
+    for (let i = 0; i < 24; i++) {
+      const hour = i === 0 ? '12am' : i < 12 ? `${i}am` : i === 12 ? '12pm' : `${i - 12}pm`; // annoying hour formatting
+      hourly.set(i, { hour, count: 0 });
+    }
+
+    // pop entries with da actual session data
+    sessions.forEach(session => {
+      const hour = DateTime.fromJSDate(session.createdAt).hour;
+      const entry = hourly.get(hour);
+
+      if (entry) {
+        entry.count += 1;
+      }
+    });
+
+    hourly = Array.from(hourly.values()); // convert back to array
+
+    res.json({ success: true, data: { totals, timeline, hourly, comparison, avgResolutionTime } });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

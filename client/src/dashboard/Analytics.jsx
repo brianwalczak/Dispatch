@@ -236,20 +236,20 @@ function Analytics({ onLoad }) {
                                 <AreaChart data={convertDaily(stats.timeline)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#155dfc" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#155dfc" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#2b7fff" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#2b7fff" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#00a63e" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#00a63e" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#00c951" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#00c951" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                     <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#9ca3af" />
                                     <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" allowDecimals={false} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Area type="monotone" dataKey="total" name="Total" stroke="#155dfc" fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
-                                    <Area type="monotone" dataKey="closed" name="Resolved" stroke="#00a63e" fillOpacity={1} fill="url(#colorClosed)" strokeWidth={2} />
+                                    <Area type="monotone" dataKey="total" name="Total" stroke="#2b7fff" fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
+                                    <Area type="monotone" dataKey="closed" name="Resolved" stroke="#00c951" fillOpacity={1} fill="url(#colorClosed)" strokeWidth={2} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : (
@@ -283,8 +283,8 @@ function Analytics({ onLoad }) {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        <Cell fill="#d08700" />
-                                        <Cell fill="#00a63e" />
+                                        <Cell fill="#f0a00cff" />
+                                        <Cell fill="#00c951" />
                                     </Pie>
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend />
@@ -328,7 +328,7 @@ function Analytics({ onLoad }) {
                                     <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="#9ca3af" />
                                     <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" allowDecimals={false} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="count" name="Conversations" fill="#155dfc" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="count" name="Conversations" fill="#2b7fff" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (

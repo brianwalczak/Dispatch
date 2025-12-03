@@ -70,7 +70,7 @@ async function verifyToken(token, method) {
       }
     });
 
-    if (valid?.expiresAt && DateTime.utc() > DateTime.fromJSDate(valid.expiresAt)) {
+    if (valid?.expiresAt && DateTime.utc() > DateTime.fromJSDate(valid.expiresAt, { zone: 'utc' })) {
       await prisma.userToken.delete({ where: { token: valid.token } });
       return false;
     }
@@ -527,7 +527,7 @@ app.post('/api/invites/:id', async (req, res) => {
     }
 
     // Check if invite has expired
-    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt)) {
+    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt, { zone: 'utc' })) {
       await prisma.teamInvite.delete({ where: { id } }); // clean up expired invite
       return res.status(400).json({ error: "Sorry, your invite has already expired. Please request a new one from the workspace owner." });
     }
@@ -628,7 +628,7 @@ app.post('/api/invites/:id/accept', async (req, res) => {
     }
 
     // Check if invite has expired
-    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt)) {
+    if (DateTime.utc() > DateTime.fromJSDate(invite.expiresAt, { zone: 'utc' })) {
       await prisma.teamInvite.delete({ where: { id } }); // clean up expired invite
       return res.status(400).json({ error: "Sorry, your invite has already expired. Please request a new one from the workspace owner." });
     }
@@ -784,8 +784,8 @@ app.post('/api/analytics/:team', async (req, res) => {
       let totalMinutes = 0;
 
       for (const s of closedSessions) {
-        const created = DateTime.fromJSDate(s.createdAt);
-        const closed = DateTime.fromJSDate(s.closedAt);
+        const created = DateTime.fromJSDate(s.createdAt, { zone: 'utc' });
+        const closed = DateTime.fromJSDate(s.closedAt, { zone: 'utc' });
 
         totalMinutes += closed.diff(created, 'minutes').minutes;
       }
@@ -807,7 +807,7 @@ app.post('/api/analytics/:team', async (req, res) => {
 
     // pop entries with da actual session data
     sessions.forEach(session => {
-      const date = DateTime.fromJSDate(session.createdAt).toFormat('MMM d');
+      const date = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).toFormat('MMM d');
 
       if (timeline.has(date)) {
         const entry = timeline.get(date);
@@ -832,7 +832,7 @@ app.post('/api/analytics/:team', async (req, res) => {
 
     // pop entries with da actual session data
     sessions.forEach(session => {
-      const hour = DateTime.fromJSDate(session.createdAt).hour;
+      const hour = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).hour;
       const entry = hourly.get(hour);
 
       if (entry) {

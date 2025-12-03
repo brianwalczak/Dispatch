@@ -742,7 +742,7 @@ app.post('/api/analytics/:team', async (req, res) => {
     const days = range === '24h' ? 1 : range === '30d' ? 30 : 7; // default to 7 days
     const now = DateTime.utc();
 
-    let startDate = now.minus({ days });
+    let startDate = now.minus({ days }).startOf('day');
     let compDate = now.minus({ days: (days * 2) });
 
     // Fetch sessions for current period
@@ -794,55 +794,46 @@ app.post('/api/analytics/:team', async (req, res) => {
     }
 
     // Construct timeline data across each day in the range
-    let timeline = new Map();
+    let timeline = [];
     const timelineDays = range === '24h' ? 2 : days; // for 24h range we need to include both today and yesterday
 
     // create empty entries for each day
     for (let i = timelineDays - 1; i >= 0; i--) {
-      const date = now.minus({ days: i });
-      const key = date.toFormat('MMM d');
-
-      timeline.set(key, { date: key, total: 0, closed: 0 });
+      timeline[i] = { total: 0, closed: 0 };
     }
 
     // pop entries with da actual session data
     sessions.forEach(session => {
-      const date = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).toFormat('MMM d');
+      const date = DateTime.fromJSDate(session.createdAt, { zone: 'utc' });
+      const daysAgo = Math.floor(now.diff(date, 'days').days);
 
-      if (timeline.has(date)) {
-        const entry = timeline.get(date);
-        entry.total += 1;
+      if (daysAgo >= 0 && daysAgo < timelineDays) {
+        const index = timelineDays - 1 - daysAgo; // convert to arr index (oldest first)
+        timeline[index].total += 1;
 
         if (session.status === 'closed') {
-          entry.closed += 1;
+          timeline[index].closed += 1;
         }
       }
     });
 
-    timeline = Array.from(timeline.values()); // convert back to array
-
     // Construct hourly distribution data for each hour in the day
-    let hourly = new Map();
+    let hourly = [];
 
     // create empty entries for each hour
     for (let i = 0; i < 24; i++) {
-      const hour = i === 0 ? '12am' : i < 12 ? `${i}am` : i === 12 ? '12pm' : `${i - 12}pm`; // annoying hour formatting
-      hourly.set(i, { hour, count: 0 });
+      hourly[i] = 0;
     }
 
     // pop entries with da actual session data
     sessions.forEach(session => {
       const hour = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).hour;
-      const entry = hourly.get(hour);
-
-      if (entry) {
-        entry.count += 1;
-      }
+      hourly[hour] += 1;
     });
 
     hourly = Array.from(hourly.values()); // convert back to array
 
-    res.json({ success: true, data: { totals, timeline, hourly, comparison, avgResolutionTime } });
+    res.json({ success: true, data: { totals, timeline, hourly, comparison, avgResolutionTime }, timezone: "UTC" /* <- add timezone for somebody snooping thru the web requests, lol */ });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

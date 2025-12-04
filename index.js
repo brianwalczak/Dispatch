@@ -387,6 +387,12 @@ app.delete('/api/workspaces/:team/users/:user', async (req, res) => {
       return res.status(404).json({ error: "We couldn't find this user in your workspace. They may have already been removed." });
     }
 
+    // If this is the last user, delete the entire workspace
+    if (workspace.users.length === 1) {
+      await prisma.team.delete({ where: { id: team } });
+      return res.json({ success: true });
+    }
+
     // Remove the user from the team
     await prisma.team.update({
       where: { id: team },

@@ -6,7 +6,6 @@ import Dashboard from "../pages/Dashboard";
 import { io } from "socket.io-client";
 const DashboardContext = createContext(undefined);
 
-const pages = ["home", "inbox", "create_workspace", "analytics", "team"];
 const DEFAULT_PAGE = "home";
 
 export const DashboardProvider = () => {
@@ -73,8 +72,6 @@ export const DashboardProvider = () => {
     }, [page]);
 
     useEffect(() => {
-        if (!pages.includes(page)) return setPage(DEFAULT_PAGE);
-
         window.history.pushState({}, "", `/${page}`);
         fetchUser(); // fetch user data again (in-case something changed)
     }, [page]); // when user changes page, fetch new data (also on mount)

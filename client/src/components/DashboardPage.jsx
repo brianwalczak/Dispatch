@@ -15,9 +15,11 @@ const pages = {
     "team": Team,
 };
 
+const DEFAULT_PAGE = "home";
+
 export default function DashboardPage({ page }) {
     const { user, loading, setLoading } = useDashboard();
-    const component = pages[page];
+    const component = pages[page] || pages[DEFAULT_PAGE];
 
     if (!component) {
         return (

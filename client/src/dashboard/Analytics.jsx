@@ -22,16 +22,18 @@ function Analytics({ onLoad }) {
 
     const convertHours = (hourlyData) => {
         if (!hourlyData || !Array.isArray(hourlyData)) return [];
-        const offset = new Date().getTimezoneOffset() / -60;
+        const offset = new Date().getTimezoneOffset() / 60;
         let data = hourlyData;
 
-        if (localTime) {
-            data = new Array(24).fill(0);
-            
-            hourlyData.forEach((count, utcHour) => {
-                const localHour = (utcHour + offset + 24) % 24;
-                data[localHour] = count;
+        if (!localTime) { // convert to UTC (the hourly data is already in local time)
+            const utcData = new Array(24).fill(0);
+
+            hourlyData.forEach((count, localHour) => {
+                const utcHour = (localHour + offset + 24) % 24;
+                utcData[Math.floor(utcHour)] = count;
             });
+
+            data = utcData;
         }
 
         return data.map((count, index) => {
@@ -48,22 +50,18 @@ function Analytics({ onLoad }) {
 
     const convertDaily = (timelineData) => {
         if (!timelineData || !Array.isArray(timelineData)) return [];
-
-        const days = timelineData.length;
         const now = new Date();
+        const days = timelineData.length;
 
         return timelineData.map((entry, index) => {
-            const daysAgo = days - 1 - index;
-            const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysAgo));
-
-            const dateLabel = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                timeZone: 'UTC'
-            });
+            const date = new Date(now);
+            date.setDate(now.getDate() - (days - 1 - index)); // calculate index
 
             return {
-                date: dateLabel,
+                date: date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                }),
                 total: entry.total,
                 closed: entry.closed
             };
@@ -92,7 +90,7 @@ function Analytics({ onLoad }) {
         $.ajax({
             url: (api_url + `/api/analytics/${user.team.id}`),
             method: 'POST',
-            data: { token: token, range: range },
+            data: { token: token, range: range, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
             success: function (response) {
                 if (response.success && response.data) {
                     setStats(response.data);

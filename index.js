@@ -715,6 +715,11 @@ app.post('/api/sessions/create', async (req, res) => {
 // -- Analytics Routes -- //
 app.post('/api/analytics/:team', async (req, res) => {
   const { token, range } = req.body;
+  let timezone = req.body?.timezone;
+
+  if (!timezone || !DateTime.now().setZone(timezone).isValid) {
+    timezone = 'utc';
+  }
 
   if (!token || !req.params?.team) {
     return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
@@ -740,16 +745,16 @@ app.post('/api/analytics/:team', async (req, res) => {
     if (!workspace) return res.status(404).json({ error: "We couldn't find this workspace. It may no longer exist." });
 
     const days = range === '24h' ? 1 : range === '30d' ? 30 : 7; // default to 7 days
-    const now = DateTime.utc();
+    const now = DateTime.now().setZone(timezone); // use user's timezone
 
     let startDate = now.minus({ days }).startOf('day');
-    let compDate = now.minus({ days: (days * 2) });
+    let compDate = now.minus({ days: (days * 2) }).startOf('day');
 
     // Fetch sessions for current period
     const sessions = await prisma.session.findMany({
       where: {
         teamId: req.params.team,
-        createdAt: { gte: startDate.toJSDate() } // greater than or equal to
+        createdAt: { gte: startDate.toUTC().toJSDate() } // greater than or equal to
       }
     });
 
@@ -758,8 +763,8 @@ app.post('/api/analytics/:team', async (req, res) => {
       where: {
         teamId: req.params.team,
         createdAt: {
-          gte: compDate.toJSDate(), // greater than or equal to the comparison start date
-          lt: startDate.toJSDate() // less than the current period start date
+          gte: compDate.toUTC().toJSDate(), // greater than or equal to the comparison start date
+          lt: startDate.toUTC().toJSDate() // less than the current period start date
         }
       }
     });
@@ -804,8 +809,8 @@ app.post('/api/analytics/:team', async (req, res) => {
 
     // pop entries with da actual session data
     sessions.forEach(session => {
-      const date = DateTime.fromJSDate(session.createdAt, { zone: 'utc' });
-      const daysAgo = Math.floor(now.diff(date, 'days').days);
+      const date = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).setZone(timezone);
+      const daysAgo = Math.floor(now.startOf('day').diff(date.startOf('day'), 'days').days);
 
       if (daysAgo >= 0 && daysAgo < timelineDays) {
         const index = timelineDays - 1 - daysAgo; // convert to arr index (oldest first)
@@ -827,13 +832,13 @@ app.post('/api/analytics/:team', async (req, res) => {
 
     // pop entries with da actual session data
     sessions.forEach(session => {
-      const hour = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).hour;
+      const hour = DateTime.fromJSDate(session.createdAt, { zone: 'utc' }).setZone(timezone).hour; // convert to user's timezone
       hourly[hour] += 1;
     });
 
     hourly = Array.from(hourly.values()); // convert back to array
 
-    res.json({ success: true, data: { totals, timeline, hourly, comparison, avgResolutionTime }, timezone: "UTC" /* <- add timezone for somebody snooping thru the web requests, lol */ });
+    res.json({ success: true, data: { totals, timeline, hourly, comparison, avgResolutionTime }, timezone: timezone });
   } catch (err) {
     res.status(500).json({ error: "Internal server error. Please try again later." });
   }

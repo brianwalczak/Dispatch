@@ -5,6 +5,8 @@ import Home from "../dashboard/Home";
 import Inbox from "../dashboard/Inbox";
 import Analytics from "../dashboard/Analytics";
 import Team from "../dashboard/Team";
+import Settings from "../dashboard/Settings";
+import Workspaces from "../dashboard/Workspaces";
 import React from "react";
 
 const pages = {
@@ -13,6 +15,8 @@ const pages = {
     "inbox": Inbox,
     "analytics": Analytics,
     "team": Team,
+    "account": Settings,
+    "workspaces": Workspaces
 };
 
 const DEFAULT_PAGE = "home";

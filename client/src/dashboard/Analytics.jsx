@@ -281,8 +281,8 @@ function Analytics({ onLoad }) {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        <Cell fill="#f0a00cff" />
-                                        <Cell fill="#00c951" />
+                                        <Cell fill="#fbbf24" />
+                                        <Cell fill="#10b981" />
                                     </Pie>
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend />

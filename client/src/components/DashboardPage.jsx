@@ -5,7 +5,7 @@ import Home from "../dashboard/Home";
 import Inbox from "../dashboard/Inbox";
 import Analytics from "../dashboard/Analytics";
 import Team from "../dashboard/Team";
-import Settings from "../dashboard/Settings";
+import Account_Settings from "../dashboard/Account_Settings";
 import Workspaces from "../dashboard/Workspaces";
 import React from "react";
 
@@ -15,7 +15,7 @@ const pages = {
     "inbox": Inbox,
     "analytics": Analytics,
     "team": Team,
-    "account": Settings,
+    "account": Account_Settings,
     "workspaces": Workspaces
 };
 

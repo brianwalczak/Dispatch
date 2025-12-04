@@ -155,7 +155,7 @@ function Analytics({ onLoad }) {
                         </div>
                     </div>
 
-                    {stats?.comparison && (
+                    {stats?.comparison != null && (
                         <p className={`text-xs ${stats.comparison >= 0 ? 'text-green-600' : 'text-red-600'} font-medium mt-2`}>
                             {stats.comparison >= 0 ? '▲' : '▼'} {Math.abs(stats.comparison)}% vs previous period
                         </p>
@@ -289,12 +289,14 @@ function Analytics({ onLoad }) {
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="text-gray-400 text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-12 mx-auto mb-2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
-                                </svg>
-                                <p>No data available</p>
+                            <div className="flex items-center justify-center h-full text-gray-400 text-center">
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-12 mx-auto mb-2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+                                    </svg>
+                                    <p>No data available</p>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -6,12 +6,10 @@ import Dashboard from "../pages/Dashboard";
 import { io } from "socket.io-client";
 const DashboardContext = createContext(undefined);
 
-const DEFAULT_PAGE = "home";
-
 export const DashboardProvider = () => {
     const { page: urlPage } = useParams();
 
-    const [page, setPage] = useState(urlPage || DEFAULT_PAGE);
+    const [page, setPage] = useState(urlPage || "home");
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [token] = useState(localStorage.getItem("token"));

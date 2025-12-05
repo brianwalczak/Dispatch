@@ -49,7 +49,7 @@ export const DashboardProvider = () => {
                             return switchPage("create_workspace");
                         }
                     }
-                    
+
                     setUser(response.data);
                 }
             },
@@ -71,10 +71,32 @@ export const DashboardProvider = () => {
         return setPage(newPage);
     }, [page]);
 
+    const [useHistory, setUseHistory] = useState(false); // annoying quirk but we can't have the pushState adding the page if it's already in history and we're just moving back/forward
     useEffect(() => {
-        window.history.pushState({}, "", `/${page}`);
+        const woopopchange = () => {
+            const location = window.location.pathname.replace("/", "");
+
+            if (location !== page) {
+                setUseHistory(true); // signal we're using history to avoid pushState
+                setPage(location || DEFAULT_PAGE);
+            }
+        };
+
+        window.addEventListener('popstate', woopopchange);
+        
+        return () => {
+            window.removeEventListener('popstate', woopopchange);
+        };
+    }, [page]);
+
+    useEffect(() => {
+        if (!useHistory) {
+            window.history.pushState({}, "", `/${page}`); // brand new, push to history
+        }
+
+        setUseHistory(false); // reset flag
         fetchUser(); // fetch user data again (in-case something changed)
-    }, [page]); // when user changes page, fetch new data (also on mount)
+    }, [page, useHistory]); // when user changes page, fetch new data (also on mount)
 
     // Establish socket connection when user is available
     useEffect(() => {

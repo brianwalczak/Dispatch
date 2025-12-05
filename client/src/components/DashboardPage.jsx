@@ -7,7 +7,7 @@ import Analytics from "../dashboard/Analytics";
 import Team from "../dashboard/Team";
 import Account_Settings from "../dashboard/Account_Settings";
 import Workspaces from "../dashboard/Workspaces";
-import React, { useCallback, useEffect, useRef } from "react";
+import React from "react";
 
 const pages = {
     "create_workspace": CreateWorkspace,
@@ -19,39 +19,9 @@ const pages = {
     "workspaces": Workspaces
 };
 
-const MINIMUM_LOADING = 2000; // 2 seconds in ms!
-
 export default function DashboardPage({ page }) {
     const { user, loading, setLoading, switchPage } = useDashboard();
     const component = pages[page];
-    const loadTime = useRef(null);
-    const timeoutRef = useRef(null);
-
-    useEffect(() => {
-        if (loading) {
-            loadTime.current = Date.now(); // record load start time
-        }
-    }, [loading]);
-
-    const finishLoading = useCallback(() => {
-        const distance = Date.now() - loadTime.current;
-
-        if (distance >= MINIMUM_LOADING) {
-            setLoading(false);
-        } else {
-            timeoutRef.current = setTimeout(() => {
-                setLoading(false);
-            }, MINIMUM_LOADING - distance);
-        }
-    }, [setLoading]);
-
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
-        };
-    }, []);
 
     if (!component) {
         return (
@@ -85,7 +55,7 @@ export default function DashboardPage({ page }) {
                 </div>
             )}
 
-            {React.createElement(component, { onLoad: () => finishLoading() })}
+            { React.createElement(component, { onLoad: () => setLoading(false) }) }
         </div>
     );
 }

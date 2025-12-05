@@ -318,6 +318,164 @@ app.post('/api/user/me', async (req, res) => {
   }
 });
 
+app.delete('/api/user/me', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Fetch the user data from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: valid.userId },
+      include: { teams: true } // basic teams data
+    });
+    if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+
+    // Remove user from all teams (that they're in ofc)
+    await prisma.team.updateMany({
+      where: {
+        users: {
+          some: { id: valid.userId }
+        }
+      },
+      data: {
+        users: {
+          disconnect: { id: valid.userId }
+        }
+      }
+    });
+
+    // Remove the users messages
+    await prisma.message.deleteMany({
+      where: { senderId: valid.userId }
+    });
+
+    // Revoke all existing auth tokens (just in case)
+    await prisma.userToken.deleteMany({
+      where: { userId: valid.userId }
+    });
+
+    // Delete the user from the database
+    await prisma.user.delete({
+      where: { id: valid.userId }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/user/update', async (req, res) => {
+  let { token, name, email } = req.body;
+
+  if (!token || !name || !email) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  name = name?.trim();
+  email = email?.trim().toLowerCase();
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Name validation
+    if (!name || name.length < 5 || name.length > 100) {
+      return res.status(400).json({ success: false, error: "Your full name must be between 5 and 100 characters long." });
+    } else if (!name.match(/^[a-zA-Z\s'-]+$/)) {
+      return res.status(400).json({ success: false, error: "Your full name contains invalid characters." });
+    } else if (!name.includes(' ')) {
+      return res.status(400).json({ success: false, error: "Please provide both your first and last name." });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.match(emailRegex) || email.length > 255) {
+      return res.status(400).json({ success: false, error: "Please provide a valid email address." });
+    }
+
+    // Update the user in the database
+    const user = await prisma.user.update({
+      where: { id: valid.userId },
+      data: {
+        name: name.trim(),
+        email: email.trim()
+      }
+    });
+
+    delete user.hash; // Remove the hash before sending the user object
+    res.json({ success: true, data: user });
+  } catch (err) {
+    if (err.code === 'P2002') { // Prisma unique constraint failed
+      return res.status(400).json({ error: "It looks like your email is already registered." });
+    }
+
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
+app.post('/api/user/password', async (req, res) => {
+  const { token, oldPassword, newPassword } = req.body;
+
+  if (!token || !oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, error: "Your request was malformed. Please try again." });
+  }
+
+  try {
+    // Token validation
+    const valid = await verifyToken(token, "auth");
+    if (!valid || !valid.userId) {
+      return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+    }
+
+    // Fetch the user data from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: valid.userId }
+    });
+    if (!user) return res.status(401).json({ error: "It looks like you've been logged out. Please sign in again." });
+
+    // Verify the current password
+    const passwordValid = await bcrypt.compare(oldPassword, user.hash);
+    if (!passwordValid) return res.status(401).json({ error: "Your current password is incorrect." });
+
+    // Password validation
+    if (newPassword.length < 8 || newPassword.length > 256) {
+      return res.status(400).json({ success: false, error: "Your new password must be between 8 and 256 characters long." });
+    }
+
+    // Hash and update the password
+    const hash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: valid.userId },
+      data: { hash }
+    });
+
+    // For safety, revoke all existing auth tokens (that aren't the current one)
+    await prisma.userToken.deleteMany({
+      where: {
+        userId: valid.userId,
+        token: { not: token }
+      }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error. Please try again later." });
+  }
+});
+
 app.post('/api/workspaces/:team', async (req, res) => {
   const { token } = req.body;
   const { team } = req.params;

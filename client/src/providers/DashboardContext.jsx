@@ -1,6 +1,6 @@
 import { api_url, socket_url } from "../providers/config";
 // ------------------------------------------------------- //
-import { createContext, useContext, useCallback, useState, useEffect } from "react";
+import { createContext, useContext, useCallback, useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
 import { io } from "socket.io-client";
@@ -71,14 +71,14 @@ export const DashboardProvider = () => {
         return setPage(newPage);
     }, [page]);
 
-    const [useHistory, setUseHistory] = useState(false); // annoying quirk but we can't have the pushState adding the page if it's already in history and we're just moving back/forward
+    const useHistory = useRef(false); // annoying quirk but we can't have the pushState adding the page if it's already in history and we're just moving back/forward
     useEffect(() => {
         const woopopchange = () => {
-            const location = window.location.pathname.replace("/", "");
+            const location = window.location.pathname?.replace("/", "");
 
-            if (location !== page) {
-                setUseHistory(true); // signal we're using history to avoid pushState
-                setPage(location || DEFAULT_PAGE);
+            if (location && location !== page) {
+                useHistory.current = true; // signal we're using history to avoid pushState
+                switchPage(location);
             }
         };
 
@@ -90,13 +90,13 @@ export const DashboardProvider = () => {
     }, [page]);
 
     useEffect(() => {
-        if (!useHistory) {
+        if (!useHistory.current) {
             window.history.pushState({}, "", `/${page}`); // brand new, push to history
         }
 
-        setUseHistory(false); // reset flag
+        useHistory.current = false; // reset flag
         fetchUser(); // fetch user data again (in-case something changed)
-    }, [page, useHistory]); // when user changes page, fetch new data (also on mount)
+    }, [page]); // when user changes page, fetch new data (also on mount)
 
     // Establish socket connection when user is available
     useEffect(() => {

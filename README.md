@@ -1,9 +1,6 @@
 <h1 align="center">Dispatch - Connect with your customers instantly.</h1>
 <p align="center">A fast, reliable live chat solution for your website to make customer support effortless.<br><br> <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a> <img src="https://hackatime-badge.hackclub.com/U091MEESEDT/Dispatch/?label=Time%20Spent" /></p>
 
-> [!TIP]
-> **Dispatch is currently live on https://dispatch.brian.icu! This project is currently under heavy construction, so do expect bugs and small quirks :)**
-
 > [!WARNING]
 > **This project is currently in its beta state as I gather user feedback. The backend is still under construction! If you encounter any issues, please report them <a href='https://github.com/BrianWalczak/Dispatch/issues'>here</a> :)**
 
